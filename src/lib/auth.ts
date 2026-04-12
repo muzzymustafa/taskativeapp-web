@@ -10,21 +10,16 @@ export const { handlers, signIn, signOut, auth: getSession } = NextAuth({
       },
       async authorize(credentials) {
         const idToken = credentials?.idToken;
-        if (!idToken || typeof idToken !== "string") {
-          console.log("[AUTH] No idToken provided");
-          return null;
-        }
+        if (!idToken || typeof idToken !== "string") return null;
 
         try {
           const decoded = await auth.verifyIdToken(idToken);
-          console.log("[AUTH] Verified user:", decoded.uid, decoded.email);
           return {
             id: decoded.uid,
             email: decoded.email || "",
             name: decoded.name || decoded.email || "",
           };
-        } catch (err) {
-          console.error("[AUTH] verifyIdToken failed:", err);
+        } catch {
           return null;
         }
       },

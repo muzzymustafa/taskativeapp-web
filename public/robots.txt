@@ -1,0 +1,8 @@
+User-agent: *
+Allow: /
+Disallow: /api/
+Disallow: /dashboard
+Disallow: /login
+Disallow: /groups
+
+Sitemap: https://taskativeapp.com/sitemap.xml
