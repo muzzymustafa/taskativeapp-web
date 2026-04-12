@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
 import { Logo } from "@/components/marketing/Logo";
 import { UserMenu } from "@/components/app/UserMenu";
+import { AppNav } from "@/components/app/AppNav";
 import type { Group } from "@/lib/adapters/types";
 
 export default function GroupsPage() {
@@ -42,17 +43,8 @@ export default function GroupsPage() {
       <header className="sticky top-0 z-50 bg-surface-1/85 backdrop-blur-xl backdrop-saturate-150 border-b border-outline">
         <div className="max-w-4xl mx-auto flex items-center justify-between px-6 h-14">
           <a href="/timeline"><Logo size="sm" /></a>
-          <div className="flex items-center gap-3">
-            <a href="/dashboard" className="text-sm text-text-muted hover:text-text transition-colors" style={{ transitionDuration: "var(--dur-1)" }}>
-              Tasks
-            </a>
-            <a href="/calendar" className="text-sm text-text-muted hover:text-text transition-colors" style={{ transitionDuration: "var(--dur-1)" }}>Calendar</a>
-            <a href="/timeline" className="text-sm text-text-muted hover:text-text transition-colors" style={{ transitionDuration: "var(--dur-1)" }}>Timeline</a>
-            <a href="/groups" className="text-sm font-medium text-primary">Groups</a>
-            <a href="/reports" className="text-sm text-text-muted hover:text-text transition-colors" style={{ transitionDuration: "var(--dur-1)" }}>Reports</a>
-            <div className="w-px h-5 bg-outline mx-1" />
-            <UserMenu email={session.user?.email || ""} />
-          </div>
+          <AppNav />
+          <UserMenu email={session.user?.email || ""} />
         </div>
       </header>
 
