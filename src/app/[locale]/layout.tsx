@@ -50,7 +50,7 @@ export const metadata: Metadata = {
     type: "website",
     images: [
       {
-        url: "/images/screen-tasks.png",
+        url: "/images/screen-tasks.webp",
         width: 1080,
         height: 2340,
         alt: "Taskative App",
@@ -62,7 +62,7 @@ export const metadata: Metadata = {
     title: "Taskative — Group Task Management Made Simple",
     description:
       "Manage tasks with your team effortlessly. Free to start.",
-    images: ["/images/screen-tasks.png"],
+    images: ["/images/screen-tasks.webp"],
   },
   robots: {
     index: true,

@@ -66,13 +66,13 @@ export function Hero() {
 
         <div className="flex items-end justify-center gap-4 sm:gap-6 max-w-3xl mx-auto">
           <div className="hidden sm:block w-48 rounded-2xl overflow-hidden border border-outline opacity-80 -rotate-3" style={{ boxShadow: 'var(--shadow-2)' }}>
-            <Image src="/images/screen-teams.png" alt="Team collaboration" width={400} height={800} className="w-full h-auto" />
+            <Image src="/images/screen-teams.webp" alt="Team collaboration" width={400} height={800} className="w-full h-auto" />
           </div>
           <div className="w-56 sm:w-64 rounded-2xl overflow-hidden border border-outline relative z-10" style={{ boxShadow: 'var(--shadow-3)' }}>
-            <Image src="/images/screen-tasks.png" alt="Task management" width={400} height={800} className="w-full h-auto" priority />
+            <Image src="/images/screen-tasks.webp" alt="Task management" width={400} height={800} className="w-full h-auto" priority />
           </div>
           <div className="hidden sm:block w-48 rounded-2xl overflow-hidden border border-outline opacity-80 rotate-3" style={{ boxShadow: 'var(--shadow-2)' }}>
-            <Image src="/images/screen-notifications.png" alt="Smart notifications" width={400} height={800} className="w-full h-auto" />
+            <Image src="/images/screen-notifications.webp" alt="Smart notifications" width={400} height={800} className="w-full h-auto" />
           </div>
         </div>
       </div>
