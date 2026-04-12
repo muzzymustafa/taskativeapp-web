@@ -57,7 +57,7 @@ export default function DashboardPage() {
       {/* Header */}
       <header className="sticky top-0 z-50 bg-surface-1/85 backdrop-blur-xl backdrop-saturate-150 border-b border-outline">
         <div className="max-w-4xl mx-auto flex items-center justify-between px-6 h-14">
-          <Logo size="sm" />
+          <a href="/timeline"><Logo size="sm" /></a>
           <div className="flex items-center gap-3">
             <a href="/dashboard" className="text-sm font-medium text-primary">Tasks</a>
             <a href="/calendar" className="text-sm text-text-muted hover:text-text transition-colors" style={{ transitionDuration: "var(--dur-1)" }}>Calendar</a>
