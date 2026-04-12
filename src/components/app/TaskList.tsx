@@ -4,33 +4,33 @@ import { useEffect, useState } from "react";
 import type { Task } from "@/lib/adapters/types";
 import { TaskDetail } from "./TaskDetail";
 
+const statusConfig: Record<string, { border: string; badge: string; badgeText: string; label: string }> = {
+  pending: { border: "border-l-warmth", badge: "bg-warmth-soft text-warmth-deep", badgeText: "Pending", label: "Pending" },
+  done: { border: "border-l-success", badge: "bg-success-light text-success", badgeText: "Done", label: "Done" },
+  cancelled: { border: "border-l-outline", badge: "bg-surface-3 text-text-dim", badgeText: "Cancelled", label: "Cancelled" },
+  late: { border: "border-l-danger", badge: "bg-danger-light text-danger", badgeText: "Overdue", label: "Overdue" },
+};
+
 export function TaskList() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"all" | "pending" | "done">("all");
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
-  useEffect(() => {
-    fetchTasks();
-  }, []);
+  useEffect(() => { fetchTasks(); }, []);
 
   async function fetchTasks() {
     try {
       const res = await fetch("/api/tasks");
       if (res.ok) setTasks(await res.json());
-    } catch {
-      /* ignore */
-    } finally {
-      setLoading(false);
-    }
+    } catch { /* */ }
+    finally { setLoading(false); }
   }
 
   async function toggleDone(e: React.MouseEvent, task: Task) {
     e.stopPropagation();
     const newStatus = task.status === "done" ? "pending" : "done";
-    setTasks((prev) =>
-      prev.map((t) => (t.id === task.id ? { ...t, status: newStatus } : t))
-    );
+    setTasks((prev) => prev.map((t) => (t.id === task.id ? { ...t, status: newStatus } : t)));
     await fetch(`/api/tasks/${task.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
@@ -40,6 +40,12 @@ export function TaskList() {
 
   function updateTaskInList(updated: Task) {
     setTasks((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
+  }
+
+  // Determine effective status (overdue check)
+  function effectiveStatus(task: Task): string {
+    if (task.status === "pending" && task.dueDate && new Date(task.dueDate) < new Date()) return "late";
+    return task.status;
   }
 
   const filtered = tasks.filter((t) => {
@@ -53,9 +59,9 @@ export function TaskList() {
 
   if (loading) {
     return (
-      <div className="space-y-2">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
         {[1, 2, 3, 4].map((i) => (
-          <div key={i} className="h-14 rounded-xl bg-surface-2 animate-pulse" />
+          <div key={i} className="h-28 rounded-2xl bg-surface-2 animate-pulse" />
         ))}
       </div>
     );
@@ -63,11 +69,11 @@ export function TaskList() {
 
   return (
     <>
-      {/* Filter chips — Google style */}
+      {/* Filter chips */}
       <div className="flex gap-2 mb-5">
         {([
           { key: "all" as const, label: "All", count: tasks.filter((t) => t.status !== "cancelled").length },
-          { key: "pending" as const, label: "Pending", count: pendingCount },
+          { key: "pending" as const, label: "Active", count: pendingCount },
           { key: "done" as const, label: "Done", count: doneCount },
         ]).map((f) => (
           <button
@@ -86,7 +92,7 @@ export function TaskList() {
         ))}
       </div>
 
-      {/* Task list */}
+      {/* Empty state */}
       {filtered.length === 0 ? (
         <div className="text-center py-20">
           <div className="w-16 h-16 rounded-full bg-surface-2 flex items-center justify-center mx-auto mb-4">
@@ -98,71 +104,102 @@ export function TaskList() {
           <p className="text-text-dim text-sm">Create one to get started</p>
         </div>
       ) : (
-        <div className="space-y-1">
-          {filtered.map((task) => (
-            <button
-              key={task.id}
-              onClick={() => setSelectedTask(task)}
-              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-surface-2 transition-colors text-left group"
-              style={{ transitionDuration: "var(--dur-1)" }}
-            >
-              {/* Checkbox */}
-              <div
-                onClick={(e) => toggleDone(e, task)}
-                className={`w-[18px] h-[18px] rounded-full border-2 flex items-center justify-center shrink-0 transition-colors cursor-pointer ${
-                  task.status === "done"
-                    ? "bg-primary border-primary"
-                    : "border-outline-strong hover:border-primary"
-                }`}
-              >
-                {task.status === "done" && (
-                  <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                  </svg>
-                )}
-              </div>
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          {filtered.map((task) => {
+            const es = effectiveStatus(task);
+            const cfg = statusConfig[es] || statusConfig.pending;
+            const checkDone = task.checklist?.filter((c) => c.done).length || 0;
+            const checkTotal = task.checklist?.length || 0;
 
-              {/* Content */}
-              <div className="flex-1 min-w-0">
-                <p className={`text-sm leading-5 truncate ${
-                  task.status === "done" ? "line-through text-text-dim" : "text-text"
-                }`}>
-                  {task.title}
-                </p>
-                <div className="flex items-center gap-2 mt-0.5">
-                  {task.description && (
-                    <span className="text-xs text-text-dim truncate max-w-[200px]">{task.description}</span>
-                  )}
-                  {task.checklist && task.checklist.length > 0 && (
-                    <span className="text-xs text-text-dim flex items-center gap-1">
-                      <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                        <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM3.75 12h.007v.008H3.75V12zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm-.375 5.25h.007v.008H3.75v-.008zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+            return (
+              <button
+                key={task.id}
+                onClick={() => setSelectedTask(task)}
+                className={`relative text-left p-4 rounded-2xl bg-surface-1 border border-outline border-l-[3px] ${cfg.border} hover:border-outline-strong hover:shadow-md transition-all group`}
+                style={{ boxShadow: "var(--shadow-1)", transitionDuration: "var(--dur-2)", transitionTimingFunction: "var(--ease)" }}
+              >
+                {/* Top row: checkbox + title + badge */}
+                <div className="flex items-start gap-3 mb-2">
+                  <div
+                    onClick={(e) => toggleDone(e, task)}
+                    className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 transition-colors cursor-pointer ${
+                      task.status === "done" ? "bg-primary border-primary" : "border-outline-strong hover:border-primary"
+                    }`}
+                  >
+                    {task.status === "done" && (
+                      <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                       </svg>
-                      {task.checklist.filter((c) => c.done).length}/{task.checklist.length}
+                    )}
+                  </div>
+                  <p className={`flex-1 text-sm font-medium leading-snug line-clamp-2 ${
+                    task.status === "done" ? "line-through text-text-dim" : "text-text"
+                  }`}>
+                    {task.title}
+                  </p>
+                </div>
+
+                {/* Description preview */}
+                {task.description && (
+                  <p className="text-xs text-text-dim line-clamp-1 mb-2 pl-8">
+                    {task.description}
+                  </p>
+                )}
+
+                {/* Checklist progress */}
+                {checkTotal > 0 && (
+                  <div className="pl-8 mb-2">
+                    <div className="flex items-center gap-2">
+                      <div className="flex-1 h-1 rounded-full bg-surface-3 overflow-hidden">
+                        <div className="h-full bg-primary rounded-full" style={{ width: `${(checkDone / checkTotal) * 100}%` }} />
+                      </div>
+                      <span className="text-[10px] text-text-dim font-medium">{checkDone}/{checkTotal}</span>
+                    </div>
+                  </div>
+                )}
+
+                {/* Bottom row: meta chips */}
+                <div className="flex items-center gap-2 pl-8 flex-wrap">
+                  {/* Due date chip */}
+                  {task.dueDate && (
+                    <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium ${
+                      es === "late" ? "bg-danger-light text-danger" : "bg-surface-2 text-text-dim"
+                    }`}>
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+                      </svg>
+                      {formatDate(task.dueDate)}
                     </span>
                   )}
-                </div>
-              </div>
 
-              {/* Right side — date + indicators */}
-              <div className="flex items-center gap-2 shrink-0">
-                {task.reminderEnabled && (
-                  <svg className="w-3.5 h-3.5 text-text-dim" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
-                  </svg>
-                )}
-                {task.dueDate && (
-                  <span className={`text-xs ${
-                    task.status !== "done" && new Date(task.dueDate) < new Date()
-                      ? "text-danger font-medium"
-                      : "text-text-dim"
-                  }`}>
-                    {formatDate(task.dueDate)}
+                  {/* Reminder chip */}
+                  {task.reminderEnabled && (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-surface-2 text-[11px] text-text-dim font-medium">
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
+                      </svg>
+                      Reminder
+                    </span>
+                  )}
+
+                  {/* Group chip */}
+                  {task.taskType !== "personal" && task.groupId && (
+                    <span className="inline-flex items-center gap-1 px-2 py-0.5 rounded-md bg-primary/8 text-[11px] text-primary font-medium">
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772" />
+                      </svg>
+                      Group
+                    </span>
+                  )}
+
+                  {/* Status badge — right aligned */}
+                  <span className={`ml-auto px-2 py-0.5 rounded-md text-[11px] font-medium ${cfg.badge}`}>
+                    {cfg.badgeText}
                   </span>
-                )}
-              </div>
-            </button>
-          ))}
+                </div>
+              </button>
+            );
+          })}
         </div>
       )}
 
@@ -188,6 +225,7 @@ function formatDate(iso: string): string {
   if (days === 1) return "Tomorrow";
   if (days === -1) return "Yesterday";
   if (days > 0 && days < 7) return d.toLocaleDateString("en", { weekday: "short" });
+  if (days < 0 && days > -7) return `${-days}d ago`;
 
   return d.toLocaleDateString("en", { month: "short", day: "numeric" });
 }
