@@ -23,15 +23,39 @@ export function TaskDetail({ task, onClose, onUpdate }: Props) {
     });
   }
 
-  function formatFullDate(iso: string) {
-    return new Date(iso).toLocaleDateString("en", {
-      weekday: "long",
-      year: "numeric",
-      month: "long",
-      day: "numeric",
-      hour: "2-digit",
-      minute: "2-digit",
-    });
+  function smartDate(iso: string): { main: string; sub: string } {
+    const d = new Date(iso);
+    const now = new Date();
+    const diffMs = now.getTime() - d.getTime();
+    const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
+    const time = d.toLocaleTimeString("en", { hour: "2-digit", minute: "2-digit" });
+
+    if (diffDays === 0) return { main: "Today", sub: time };
+    if (diffDays === 1) return { main: "Yesterday", sub: time };
+    if (diffDays === -1) return { main: "Tomorrow", sub: time };
+    if (diffDays > 1 && diffDays < 7) return { main: `${diffDays} days ago`, sub: time };
+    if (diffDays < 0 && diffDays > -7) return { main: `In ${-diffDays} days`, sub: time };
+
+    return {
+      main: d.toLocaleDateString("en", { month: "short", day: "numeric", year: d.getFullYear() !== now.getFullYear() ? "numeric" : undefined }),
+      sub: time,
+    };
+  }
+
+  function dueDateDisplay(iso: string): { main: string; sub: string } {
+    const d = new Date(iso);
+    const now = new Date();
+    const diffMs = d.getTime() - now.getTime();
+    const diffDays = Math.ceil(diffMs / (1000 * 60 * 60 * 24));
+    const datePart = d.toLocaleDateString("en", { weekday: "short", month: "short", day: "numeric" });
+    const time = d.toLocaleTimeString("en", { hour: "2-digit", minute: "2-digit" });
+
+    if (diffDays === 0) return { main: `Today, ${time}`, sub: "" };
+    if (diffDays === 1) return { main: `Tomorrow, ${time}`, sub: "" };
+    if (diffDays < 0) return { main: datePart, sub: `${-diffDays}d overdue` };
+    if (diffDays < 7) return { main: datePart, sub: `In ${diffDays} days` };
+
+    return { main: datePart, sub: time };
   }
 
   const isDone = status === "done";
@@ -97,21 +121,22 @@ export function TaskDetail({ task, onClose, onUpdate }: Props) {
           )}
 
           {/* Due date */}
-          {task.dueDate && (
-            <div className="flex items-center gap-3">
-              <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isOverdue ? "bg-danger-light" : "bg-surface-2"}`}>
-                <svg className={`w-4 h-4 ${isOverdue ? "text-danger" : "text-text-muted"}`} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
-                </svg>
+          {task.dueDate && (() => {
+            const dd = dueDateDisplay(task.dueDate);
+            return (
+              <div className="flex items-center gap-3">
+                <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isOverdue ? "bg-danger-light" : "bg-surface-2"}`}>
+                  <svg className={`w-4 h-4 ${isOverdue ? "text-danger" : "text-text-muted"}`} fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
+                  </svg>
+                </div>
+                <div>
+                  <p className={`text-sm font-medium ${isOverdue ? "text-danger" : "text-text"}`}>{dd.main}</p>
+                  {dd.sub && <p className={`text-xs ${isOverdue ? "text-danger" : "text-text-dim"}`}>{dd.sub}</p>}
+                </div>
               </div>
-              <div>
-                <p className={`text-sm font-medium ${isOverdue ? "text-danger" : "text-text"}`}>
-                  {formatFullDate(task.dueDate)}
-                </p>
-                {isOverdue && <p className="text-xs text-danger">Overdue</p>}
-              </div>
-            </div>
-          )}
+            );
+          })()}
 
           {/* Reminder */}
           {task.reminderEnabled && task.reminderTime && (
@@ -122,7 +147,7 @@ export function TaskDetail({ task, onClose, onUpdate }: Props) {
                 </svg>
               </div>
               <p className="text-sm text-text-2">
-                Reminder: {formatFullDate(task.reminderTime)}
+                {(() => { const r = smartDate(task.reminderTime!); return `${r.main} at ${r.sub}`; })()}
               </p>
             </div>
           )}
@@ -206,11 +231,14 @@ export function TaskDetail({ task, onClose, onUpdate }: Props) {
           )}
 
           {/* Meta */}
-          <div className="pt-3 border-t border-outline/50">
-            <p className="text-xs text-text-dim">
-              Created {formatFullDate(task.createdAt)}
-              {task.updatedAt && ` · Updated ${formatFullDate(task.updatedAt)}`}
-            </p>
+          <div className="pt-3 border-t border-outline/50 flex items-center gap-4 text-xs text-text-dim">
+            <span>Created {smartDate(task.createdAt).main}</span>
+            {task.updatedAt && (
+              <>
+                <span className="w-1 h-1 rounded-full bg-outline" />
+                <span>Updated {smartDate(task.updatedAt).main}</span>
+              </>
+            )}
           </div>
         </div>
 
