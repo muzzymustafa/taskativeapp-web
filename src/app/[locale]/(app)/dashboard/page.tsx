@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Logo } from "@/components/marketing/Logo";
 import { TaskList } from "@/components/app/TaskList";
 import { CreateTaskForm } from "@/components/app/CreateTaskForm";
+import { SmartImport } from "@/components/app/SmartImport";
 import { UserMenu } from "@/components/app/UserMenu";
 import type { UserProfile, Task } from "@/lib/adapters/types";
 
@@ -101,7 +102,8 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Create task */}
+        {/* Smart import + Create task */}
+        <SmartImport onImported={() => setRefreshKey((k) => k + 1)} />
         <CreateTaskForm onCreated={() => setRefreshKey((k) => k + 1)} />
 
         {/* Task list */}
