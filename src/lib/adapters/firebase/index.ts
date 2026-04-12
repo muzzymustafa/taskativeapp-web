@@ -98,6 +98,36 @@ export const taskRepo: TaskRepository = {
       taskData.startDate = Timestamp.fromDate(new Date(data.dueDate));
     }
 
+    // Group task: write to groups/{groupId}/tasks
+    if (data.groupId) {
+      taskData.taskType = "group";
+      // Get group name for context
+      const groupDoc = await db.collection("groups").doc(data.groupId).get();
+      if (groupDoc.exists) {
+        taskData.groupName = groupDoc.data()?.groupName || null;
+      }
+      const ref = await db
+        .collection("groups")
+        .doc(data.groupId)
+        .collection("tasks")
+        .add(taskData);
+
+      return {
+        id: ref.id,
+        title: data.title,
+        description: data.description || "",
+        status: "pending" as const,
+        dueDate: data.dueDate || null,
+        createdAt: new Date().toISOString(),
+        createdByUserId: userId,
+        groupId: data.groupId,
+        groupName: taskData.groupName || null,
+        assignedTo: [userId],
+        taskType: "group",
+      };
+    }
+
+    // Personal task: write to usertasks/{userId}/tasks
     const ref = await db
       .collection("usertasks")
       .doc(userId)
@@ -118,9 +148,9 @@ export const taskRepo: TaskRepository = {
       dueDate: data.dueDate || null,
       createdAt: new Date().toISOString(),
       createdByUserId: userId,
-      groupId: data.groupId || null,
+      groupId: null,
       groupName: null,
-      assignedTo: [],
+      assignedTo: [userId],
     };
   },
 
