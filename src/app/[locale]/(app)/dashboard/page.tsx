@@ -61,6 +61,7 @@ export default function DashboardPage() {
           <div className="flex items-center gap-3">
             <a href="/dashboard" className="text-sm font-medium text-primary">Tasks</a>
             <a href="/groups" className="text-sm text-text-muted hover:text-text transition-colors" style={{ transitionDuration: "var(--dur-1)" }}>Groups</a>
+            <a href="/reports" className="text-sm text-text-muted hover:text-text transition-colors" style={{ transitionDuration: "var(--dur-1)" }}>Reports</a>
             <div className="w-px h-5 bg-outline mx-1" />
             <UserMenu email={session.user?.email || ""} />
           </div>
