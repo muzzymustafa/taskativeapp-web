@@ -2,9 +2,9 @@
 
 import { useState } from "react";
 import { signIn } from "next-auth/react";
-import { signInWithEmailAndPassword, signInWithPopup, GoogleAuthProvider } from "firebase/auth";
-import { clientAuth } from "@/lib/firebase/client";
 import { Logo } from "@/components/marketing/Logo";
+
+const FIREBASE_API_KEY = "AIzaSyC5U0sq27tVGbyV9UPP58V7QZeddALVSkI";
 
 export default function LoginPage() {
   const [email, setEmail] = useState("");
@@ -18,27 +18,49 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
-      const userCredential = await signInWithEmailAndPassword(clientAuth, email, password);
-      const idToken = await userCredential.user.getIdToken();
+      // Use Firebase REST API directly — avoids SDK/domain issues
+      const res = await fetch(
+        `https://identitytoolkit.googleapis.com/v1/accounts:signInWithPassword?key=${FIREBASE_API_KEY}`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            email,
+            password,
+            returnSecureToken: true,
+          }),
+        }
+      );
 
+      const data = await res.json();
+
+      if (data.error) {
+        const code = data.error.message;
+        if (code === "INVALID_LOGIN_CREDENTIALS" || code === "INVALID_PASSWORD") {
+          setError("Invalid email or password.");
+        } else if (code === "EMAIL_NOT_FOUND") {
+          setError("No account found with this email.");
+        } else if (code === "TOO_MANY_ATTEMPTS_TRY_LATER") {
+          setError("Too many attempts. Please try again later.");
+        } else {
+          setError(code || "Login failed.");
+        }
+        return;
+      }
+
+      // data.idToken is the Firebase ID token
       const result = await signIn("credentials", {
-        idToken,
+        idToken: data.idToken,
         redirect: false,
       });
 
       if (result?.error) {
-        setError("Login failed. Please try again.");
+        setError("Session creation failed. Please try again.");
       } else {
         window.location.href = "/dashboard";
       }
     } catch (err: any) {
-      if (err.code === "auth/invalid-credential" || err.code === "auth/wrong-password") {
-        setError("Invalid email or password.");
-      } else if (err.code === "auth/user-not-found") {
-        setError("No account found with this email.");
-      } else {
-        setError(err.message || "Something went wrong.");
-      }
+      setError(err.message || "Network error. Please try again.");
     } finally {
       setLoading(false);
     }
@@ -49,6 +71,10 @@ export default function LoginPage() {
     setLoading(true);
 
     try {
+      // Dynamic import to avoid SSR issues
+      const { signInWithPopup, GoogleAuthProvider } = await import("firebase/auth");
+      const { clientAuth } = await import("@/lib/firebase/client");
+
       const provider = new GoogleAuthProvider();
       const result = await signInWithPopup(clientAuth, provider);
       const idToken = await result.user.getIdToken();
@@ -66,6 +92,8 @@ export default function LoginPage() {
     } catch (err: any) {
       if (err.code === "auth/popup-closed-by-user") {
         // user closed popup, ignore
+      } else if (err.code === "auth/unauthorized-domain") {
+        setError("Domain not authorized. Add taskativeapp.com in Firebase Console → Authentication → Settings → Authorized domains.");
       } else {
         setError(err.message || "Google sign-in failed.");
       }
