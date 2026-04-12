@@ -1,0 +1,190 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      width: 320px;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      background: #FAFBFA;
+      color: #111827;
+      padding: 16px;
+    }
+    .header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    .logo {
+      width: 28px;
+      height: 28px;
+      border-radius: 8px;
+      background: #2E8B34;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: 700;
+      font-size: 14px;
+    }
+    h1 {
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .subtitle {
+      font-size: 11px;
+      color: #6B7280;
+      margin-bottom: 16px;
+    }
+    .form-group {
+      margin-bottom: 10px;
+    }
+    label {
+      display: block;
+      font-size: 10px;
+      font-weight: 600;
+      color: #6B7280;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      margin-bottom: 4px;
+    }
+    input, textarea {
+      width: 100%;
+      padding: 8px 10px;
+      border: 1px solid #DCE5DC;
+      border-radius: 8px;
+      font-size: 12px;
+      font-family: inherit;
+      background: white;
+      color: #111827;
+    }
+    input:focus, textarea:focus {
+      outline: none;
+      border-color: #2E8B34;
+    }
+    textarea {
+      resize: none;
+      min-height: 50px;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      border: none;
+      border-radius: 999px;
+      background: #2E8B34;
+      color: white;
+      font-weight: 600;
+      font-size: 12px;
+      cursor: pointer;
+      transition: background 0.15s;
+    }
+    button:hover {
+      background: #257A2B;
+    }
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+    .ghost {
+      background: #F0F5F0;
+      color: #374151;
+      margin-top: 6px;
+    }
+    .ghost:hover {
+      background: #E8F0E8;
+    }
+    .error {
+      font-size: 11px;
+      color: #D9344A;
+      background: #FEE8EC;
+      padding: 6px 10px;
+      border-radius: 6px;
+      margin-top: 8px;
+    }
+    .success {
+      font-size: 11px;
+      color: #1A9E5C;
+      background: #E6F9F0;
+      padding: 6px 10px;
+      border-radius: 6px;
+      margin-top: 8px;
+    }
+    .user-info {
+      font-size: 11px;
+      color: #6B7280;
+      padding: 8px 10px;
+      background: #F0F5F0;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .user-info a {
+      color: #D9344A;
+      text-decoration: none;
+      font-weight: 500;
+    }
+    .footer {
+      margin-top: 12px;
+      padding-top: 10px;
+      border-top: 1px solid #DCE5DC;
+      font-size: 10px;
+      color: #9CA3AF;
+      text-align: center;
+    }
+    .footer a {
+      color: #2E8B34;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <div class="logo">T</div>
+    <h1>Taskative</h1>
+  </div>
+
+  <!-- Login view -->
+  <div id="login-view">
+    <p class="subtitle">Sign in to start adding tasks</p>
+    <div class="form-group">
+      <label>Email</label>
+      <input type="email" id="email" placeholder="you@example.com" />
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input type="password" id="password" placeholder="••••••••" />
+    </div>
+    <button id="login-btn">Sign in</button>
+    <div id="login-error"></div>
+  </div>
+
+  <!-- Add task view (when logged in) -->
+  <div id="task-view" style="display:none;">
+    <div class="user-info">
+      <span id="user-email"></span>
+      <a href="#" id="logout">Sign out</a>
+    </div>
+    <div class="form-group">
+      <label>Task</label>
+      <input type="text" id="task-title" placeholder="What needs to be done?" />
+    </div>
+    <div class="form-group">
+      <label>Notes (optional)</label>
+      <textarea id="task-desc" placeholder="Add details..."></textarea>
+    </div>
+    <button id="add-btn">Add to Taskative</button>
+    <button class="ghost" id="open-app">Open Taskative</button>
+    <div id="task-message"></div>
+  </div>
+
+  <div class="footer">
+    Tip: select text on any page → right-click → <strong>Add to Taskative</strong>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>
