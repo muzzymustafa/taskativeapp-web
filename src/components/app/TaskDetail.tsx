@@ -117,7 +117,7 @@ export function TaskDetail({ task, onClose, onUpdate }: Props) {
             }`}
           >
             {isDone && (
-              <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
+              <svg className="w-3 h-3 text-on-primary" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
               </svg>
             )}
@@ -280,7 +280,7 @@ export function TaskDetail({ task, onClose, onUpdate }: Props) {
                 {checklist.map((item, i) => (
                   <div key={i} className="flex items-center gap-3 py-1.5 px-1">
                     <div className={`w-4 h-4 rounded border-2 flex items-center justify-center shrink-0 ${item.done ? "bg-primary border-primary" : "border-outline-strong"}`}>
-                      {item.done && <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>}
+                      {item.done && <svg className="w-2.5 h-2.5 text-on-primary" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24"><path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" /></svg>}
                     </div>
                     <span className={`text-sm ${item.done ? "line-through text-text-dim" : "text-text"}`}>{item.text}</span>
                   </div>

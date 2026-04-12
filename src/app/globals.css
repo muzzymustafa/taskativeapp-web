@@ -20,6 +20,7 @@
   --primary-hover: #257A2B;
   --primary-light: #E8F5E9;
   --primary-glow: rgba(46, 139, 52, 0.10);
+  --on-primary: #FFFFFF;
 
   /* Warmth accent — design.google editorial accent */
   --warmth: #E8A33D;
@@ -65,6 +66,7 @@ html.dark {
   --primary-hover: #A5D6A7;
   --primary-light: #1A2E1C;
   --primary-glow: rgba(129, 199, 132, 0.15);
+  --on-primary: #0E2611;
   --warmth: #FFD58E;
   --warmth-soft: #2A2418;
   --warmth-deep: #FFD58E;
@@ -103,6 +105,7 @@ html.light {
     --primary-hover: #A5D6A7;
     --primary-light: #1A2E1C;
     --primary-glow: rgba(129, 199, 132, 0.15);
+    --on-primary: #0E2611;
 
     --warmth: #FFD58E;
     --warmth-soft: #2A2418;
@@ -137,6 +140,7 @@ html.light {
   --color-primary-hover: var(--primary-hover);
   --color-primary-light: var(--primary-light);
   --color-primary-glow: var(--primary-glow);
+  --color-on-primary: var(--on-primary);
   --color-warmth: var(--warmth);
   --color-warmth-soft: var(--warmth-soft);
   --color-warmth-deep: var(--warmth-deep);

@@ -146,7 +146,7 @@ export function SmartImport({ onImported }: { onImported: () => void }) {
             <button
               onClick={handleExtract}
               disabled={text.trim().length < 5}
-              className="px-5 py-2 rounded-lg bg-primary text-white text-sm font-semibold hover:bg-primary-hover transition-colors disabled:opacity-40"
+              className="px-5 py-2 rounded-lg bg-primary text-on-primary text-sm font-semibold hover:bg-primary-hover transition-colors disabled:opacity-40"
               style={{ transitionDuration: "var(--dur-1)" }}
             >
               Extract tasks
@@ -195,7 +195,7 @@ export function SmartImport({ onImported }: { onImported: () => void }) {
               <button
                 onClick={handleImport}
                 disabled={importing || tasks.filter((t) => t.selected).length === 0}
-                className="px-5 py-2 rounded-lg bg-primary text-white text-sm font-semibold hover:bg-primary-hover transition-colors disabled:opacity-40"
+                className="px-5 py-2 rounded-lg bg-primary text-on-primary text-sm font-semibold hover:bg-primary-hover transition-colors disabled:opacity-40"
                 style={{ transitionDuration: "var(--dur-1)" }}
               >
                 {importing ? `Importing...` : `Import ${tasks.filter((t) => t.selected).length} tasks`}

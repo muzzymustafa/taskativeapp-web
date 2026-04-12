@@ -182,7 +182,7 @@ export function TaskList() {
                     }`}
                   >
                     {task.status === "done" && (
-                      <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
+                      <svg className="w-3 h-3 text-on-primary" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                       </svg>
                     )}

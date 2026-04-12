@@ -182,7 +182,7 @@ export default function LoginPage() {
             <button
               type="submit"
               disabled={loading}
-              className="w-full py-3 rounded-full bg-primary text-white font-semibold text-sm hover:bg-primary-hover transition-colors disabled:opacity-50"
+              className="w-full py-3 rounded-full bg-primary text-on-primary font-semibold text-sm hover:bg-primary-hover transition-colors disabled:opacity-50"
               style={{ transitionDuration: "var(--dur-1)" }}
             >
               {loading ? "Signing in..." : "Sign in"}

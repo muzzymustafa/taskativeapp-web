@@ -238,7 +238,7 @@ export default function TimelinePage() {
                           className={`absolute top-1/2 -translate-y-1/2 h-5 rounded-md ${barColor} opacity-90 hover:opacity-100 transition-opacity px-2 flex items-center overflow-hidden`}
                           style={{ left: `${left}%`, width: `${width}%`, minWidth: "20px" }}
                         >
-                          <span className="text-[10px] font-medium text-white truncate">
+                          <span className="text-[10px] font-medium text-on-primary truncate">
                             {task.title}
                           </span>
                         </div>
