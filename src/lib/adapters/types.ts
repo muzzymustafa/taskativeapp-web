@@ -22,6 +22,7 @@ export interface Task {
   reminderTime?: string | null;
   recurrence?: string;
   taskType?: string;
+  createdFrom?: string;
 }
 
 export interface Group {
@@ -55,6 +56,8 @@ export interface CreateTaskInput {
   dueDate?: string | null;
   startDate?: string | null;
   groupId?: string | null;
+  recurrence?: string;
+  checklist?: ChecklistItem[];
 }
 
 export interface UpdateTaskInput {

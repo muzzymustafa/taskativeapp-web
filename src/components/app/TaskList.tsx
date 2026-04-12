@@ -247,6 +247,13 @@ export function TaskList() {
                     </span>
                   )}
 
+                  {/* Web indicator */}
+                  {task.createdFrom === "web" && (
+                    <span className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-info/10 text-[10px] text-info font-medium" title="Created from web">
+                      web
+                    </span>
+                  )}
+
                   {/* Status badge — right aligned */}
                   <span className={`ml-auto px-2 py-0.5 rounded-md text-[11px] font-medium ${cfg.badge}`}>
                     {cfg.badgeText}

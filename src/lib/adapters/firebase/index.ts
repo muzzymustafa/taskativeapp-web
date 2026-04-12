@@ -40,6 +40,7 @@ function mapTask(d: any, userId: string): Task {
     reminderTime: data.reminderTime ? toISO(data.reminderTime) : null,
     recurrence: data.recurrence || "none",
     taskType: data.taskType || "personal",
+    createdFrom: data.createdFrom || "mobile",
   };
 }
 
@@ -91,7 +92,15 @@ export const taskRepo: TaskRepository = {
       reminderOneHourStartSent: false,
       _loadedFromTemplate: false,
       _templateId: null,
+      createdFrom: "web",
     };
+
+    if (data.recurrence && data.recurrence !== "none") {
+      taskData.recurrence = data.recurrence;
+    }
+    if (data.checklist && data.checklist.length > 0) {
+      taskData.checklist = data.checklist;
+    }
 
     if (data.dueDate) {
       taskData.endDate = Timestamp.fromDate(new Date(data.dueDate));

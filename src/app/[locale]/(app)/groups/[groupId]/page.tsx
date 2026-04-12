@@ -90,6 +90,13 @@ export default function GroupDetailPage() {
   const colors = ["bg-primary", "bg-warmth", "bg-success", "bg-info", "bg-danger"];
   const colorIdx = group ? group.groupName.charCodeAt(0) % colors.length : 0;
 
+  // Member workload distribution
+  const memberStats = group ? group.members.map((m) => {
+    const memberTasks = tasks.filter((t) => t.assignedEmails?.includes(m.email) && t.status !== "cancelled");
+    const memberDone = memberTasks.filter((t) => t.status === "done").length;
+    return { email: m.email, total: memberTasks.length, done: memberDone };
+  }).sort((a, b) => b.total - a.total) : [];
+
   return (
     <div className="min-h-screen bg-bg">
       <header className="sticky top-0 z-50 bg-surface-1/85 backdrop-blur-xl backdrop-saturate-150 border-b border-outline">
@@ -169,6 +176,39 @@ export default function GroupDetailPage() {
                 <p className={`text-xs mt-0.5 ${overdue.length > 0 ? "text-danger/70" : "text-text-dim"}`}>Overdue</p>
               </div>
             </div>
+
+            {/* Member workload */}
+            {memberStats.length > 0 && memberStats.some((m) => m.total > 0) && (
+              <div className="p-5 rounded-2xl bg-surface-1 border border-outline mb-6" style={{ boxShadow: "var(--shadow-1)" }}>
+                <h2 className="text-xs font-semibold text-text-dim uppercase tracking-wider mb-4">Workload Distribution</h2>
+                <div className="space-y-3">
+                  {memberStats.map((m) => {
+                    const progress = m.total > 0 ? (m.done / m.total) * 100 : 0;
+                    return (
+                      <div key={m.email}>
+                        <div className="flex items-center justify-between mb-1.5">
+                          <div className="flex items-center gap-2 min-w-0">
+                            <div className="w-6 h-6 rounded-full bg-primary/15 flex items-center justify-center shrink-0">
+                              <span className="text-primary text-[10px] font-bold">{m.email.charAt(0).toUpperCase()}</span>
+                            </div>
+                            <span className="text-sm text-text truncate">{m.email.split("@")[0]}</span>
+                          </div>
+                          <span className="text-xs text-text-dim shrink-0 ml-2">
+                            {m.done}/{m.total} done
+                          </span>
+                        </div>
+                        <div className="h-1.5 rounded-full bg-surface-3 overflow-hidden">
+                          <div
+                            className="h-full bg-primary rounded-full transition-all"
+                            style={{ width: `${progress}%`, transitionDuration: "var(--dur-2)" }}
+                          />
+                        </div>
+                      </div>
+                    );
+                  })}
+                </div>
+              </div>
+            )}
 
             {/* Create task in group */}
             <form onSubmit={handleCreateTask} className="mb-6">

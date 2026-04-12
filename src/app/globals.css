@@ -53,9 +53,45 @@
   --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-/* Dark override */
+/* Manual dark theme via class */
+html.dark {
+  --bg: #111827;
+  --surface-1: #1F2937;
+  --surface-2: #283830;
+  --surface-3: #374151;
+  --outline: #4B5563;
+  --outline-strong: #6B7280;
+  --primary: #81C784;
+  --primary-hover: #A5D6A7;
+  --primary-light: #1A2E1C;
+  --primary-glow: rgba(129, 199, 132, 0.15);
+  --warmth: #FFD58E;
+  --warmth-soft: #2A2418;
+  --warmth-deep: #FFD58E;
+  --success: #6EE7B7;
+  --success-light: #1A2E24;
+  --warning: #FBBF24;
+  --danger: #F87171;
+  --danger-light: #2E1A1E;
+  --info: #64B5F6;
+  --text: #F9FAFB;
+  --text-2: #E5E7EB;
+  --text-muted: #D1D5DB;
+  --text-dim: #9CA3AF;
+  --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.20);
+  --shadow-2: 0 6px 24px rgba(0, 0, 0, 0.25);
+  --shadow-3: 0 24px 60px rgba(0, 0, 0, 0.35);
+}
+
+/* Manual light theme via class */
+html.light {
+  --bg: #FAFBFA;
+  --surface-1: #FFFFFF;
+}
+
+/* Auto dark theme */
 @media (prefers-color-scheme: dark) {
-  :root {
+  html:not(.light):not(.dark) {
     --bg: #111827;
     --surface-1: #1F2937;
     --surface-2: #283830;
