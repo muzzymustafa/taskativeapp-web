@@ -23,7 +23,7 @@ export async function POST(req: NextRequest) {
 
   try {
     const body = await req.json();
-    const { title, description, dueDate, groupId } = body;
+    const { title, description, dueDate, startDate, groupId } = body;
 
     if (!title || typeof title !== "string" || title.trim().length === 0) {
       return NextResponse.json({ error: "Title is required" }, { status: 400 });
@@ -33,6 +33,7 @@ export async function POST(req: NextRequest) {
       title: title.trim(),
       description: description?.trim() || "",
       dueDate: dueDate || null,
+      startDate: startDate || null,
       groupId: groupId || null,
     });
 

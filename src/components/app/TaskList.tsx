@@ -275,11 +275,16 @@ function formatDate(iso: string): string {
   const now = new Date();
   const diff = d.getTime() - now.getTime();
   const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
+  const time = d.toLocaleTimeString("en", { hour: "2-digit", minute: "2-digit" });
+  const isEndOfDay = d.getHours() === 23 && d.getMinutes() >= 59;
 
-  if (days === 0) return "Today";
-  if (days === 1) return "Tomorrow";
+  if (days === 0) return isEndOfDay ? "Today" : `Today ${time}`;
+  if (days === 1) return isEndOfDay ? "Tomorrow" : `Tomorrow ${time}`;
   if (days === -1) return "Yesterday";
-  if (days > 0 && days < 7) return d.toLocaleDateString("en", { weekday: "short" });
+  if (days > 0 && days < 7) {
+    const day = d.toLocaleDateString("en", { weekday: "short" });
+    return isEndOfDay ? day : `${day} ${time}`;
+  }
   if (days < 0 && days > -7) return `${-days}d ago`;
 
   return d.toLocaleDateString("en", { month: "short", day: "numeric" });

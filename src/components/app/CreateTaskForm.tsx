@@ -7,7 +7,16 @@ export function CreateTaskForm({ onCreated }: { onCreated: () => void }) {
   const [loading, setLoading] = useState(false);
   const [expanded, setExpanded] = useState(false);
   const [description, setDescription] = useState("");
-  const [dueDate, setDueDate] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [startTime, setStartTime] = useState("");
+  const [endDate, setEndDate] = useState("");
+  const [endTime, setEndTime] = useState("");
+
+  function buildISO(date: string, time: string): string | null {
+    if (!date) return null;
+    const t = time || "23:59";
+    return new Date(`${date}T${t}:00`).toISOString();
+  }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
@@ -21,22 +30,23 @@ export function CreateTaskForm({ onCreated }: { onCreated: () => void }) {
         body: JSON.stringify({
           title: title.trim(),
           description: description.trim() || undefined,
-          dueDate: dueDate || undefined,
+          startDate: buildISO(startDate, startTime),
+          dueDate: buildISO(endDate, endTime),
         }),
       });
 
       if (res.ok) {
         setTitle("");
         setDescription("");
-        setDueDate("");
+        setStartDate("");
+        setStartTime("");
+        setEndDate("");
+        setEndTime("");
         setExpanded(false);
         onCreated();
       }
-    } catch {
-      /* ignore */
-    } finally {
-      setLoading(false);
-    }
+    } catch { /* */ }
+    finally { setLoading(false); }
   }
 
   return (
@@ -66,22 +76,51 @@ export function CreateTaskForm({ onCreated }: { onCreated: () => void }) {
       </div>
 
       {expanded && (
-        <div className="flex gap-3 mt-2 px-1">
+        <div className="mt-3 space-y-3 px-1">
           <input
             type="text"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
             placeholder="Add details"
-            className="flex-1 px-3 py-2 rounded-lg bg-surface-2 border border-transparent text-sm text-text placeholder:text-text-dim focus:outline-none focus:border-outline transition-colors"
+            className="w-full px-3 py-2 rounded-lg bg-surface-2 border border-transparent text-sm text-text placeholder:text-text-dim focus:outline-none focus:border-outline transition-colors"
             style={{ transitionDuration: "var(--dur-1)" }}
           />
-          <input
-            type="date"
-            value={dueDate}
-            onChange={(e) => setDueDate(e.target.value)}
-            className="px-3 py-2 rounded-lg bg-surface-2 border border-transparent text-sm text-text focus:outline-none focus:border-outline transition-colors"
-            style={{ transitionDuration: "var(--dur-1)" }}
-          />
+          <div className="grid grid-cols-2 gap-3">
+            <div>
+              <label className="block text-[10px] font-medium text-text-dim uppercase tracking-wider mb-1">Start</label>
+              <div className="flex gap-2">
+                <input
+                  type="date"
+                  value={startDate}
+                  onChange={(e) => setStartDate(e.target.value)}
+                  className="flex-1 min-w-0 px-3 py-2 rounded-lg bg-surface-2 border border-transparent text-xs text-text focus:outline-none focus:border-outline transition-colors"
+                />
+                <input
+                  type="time"
+                  value={startTime}
+                  onChange={(e) => setStartTime(e.target.value)}
+                  className="px-2 py-2 rounded-lg bg-surface-2 border border-transparent text-xs text-text focus:outline-none focus:border-outline transition-colors"
+                />
+              </div>
+            </div>
+            <div>
+              <label className="block text-[10px] font-medium text-text-dim uppercase tracking-wider mb-1">Due</label>
+              <div className="flex gap-2">
+                <input
+                  type="date"
+                  value={endDate}
+                  onChange={(e) => setEndDate(e.target.value)}
+                  className="flex-1 min-w-0 px-3 py-2 rounded-lg bg-surface-2 border border-transparent text-xs text-text focus:outline-none focus:border-outline transition-colors"
+                />
+                <input
+                  type="time"
+                  value={endTime}
+                  onChange={(e) => setEndTime(e.target.value)}
+                  className="px-2 py-2 rounded-lg bg-surface-2 border border-transparent text-xs text-text focus:outline-none focus:border-outline transition-colors"
+                />
+              </div>
+            </div>
+          </div>
         </div>
       )}
     </form>

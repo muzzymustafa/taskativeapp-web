@@ -184,6 +184,25 @@ export function TaskDetail({ task, onClose, onUpdate }: Props) {
             )}
           </div>
 
+          {/* Start date */}
+          {task.startDate && (
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-lg bg-surface-2 flex items-center justify-center">
+                <svg className="w-4 h-4 text-text-muted" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z" />
+                </svg>
+              </div>
+              <div>
+                <p className="text-[10px] uppercase tracking-wider text-text-dim font-medium">Starts</p>
+                <p className="text-sm text-text">
+                  {new Date(task.startDate).toLocaleDateString("en", { weekday: "short", month: "short", day: "numeric" })}
+                  {" · "}
+                  {new Date(task.startDate).toLocaleTimeString("en", { hour: "2-digit", minute: "2-digit" })}
+                </p>
+              </div>
+            </div>
+          )}
+
           {/* Due date — editable */}
           <div className="flex items-center gap-3">
             <div className={`w-8 h-8 rounded-lg flex items-center justify-center ${isOverdue ? "bg-danger-light" : "bg-surface-2"}`}>
@@ -192,16 +211,19 @@ export function TaskDetail({ task, onClose, onUpdate }: Props) {
               </svg>
             </div>
             <div className="flex-1">
-              {task.dueDate && (() => {
-                const dd = dueDateDisplay(task.dueDate);
-                return (
-                  <div>
-                    <p className={`text-sm font-medium ${isOverdue ? "text-danger" : "text-text"}`}>{dd.main}</p>
-                    {dd.sub && <p className={`text-xs ${isOverdue ? "text-danger" : "text-text-dim"}`}>{dd.sub}</p>}
-                  </div>
-                );
-              })()}
-              {!task.dueDate && <p className="text-sm text-text-dim">No due date</p>}
+              <p className="text-[10px] uppercase tracking-wider text-text-dim font-medium">Due</p>
+              {task.dueDate ? (
+                <div>
+                  <p className={`text-sm font-medium ${isOverdue ? "text-danger" : "text-text"}`}>
+                    {new Date(task.dueDate).toLocaleDateString("en", { weekday: "short", month: "short", day: "numeric" })}
+                    {" · "}
+                    {new Date(task.dueDate).toLocaleTimeString("en", { hour: "2-digit", minute: "2-digit" })}
+                  </p>
+                  {isOverdue && <p className="text-xs text-danger">Overdue</p>}
+                </div>
+              ) : (
+                <p className="text-sm text-text-dim">No due date</p>
+              )}
             </div>
             <input
               type="date"

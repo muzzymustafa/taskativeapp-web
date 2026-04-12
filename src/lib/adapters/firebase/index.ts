@@ -95,6 +95,11 @@ export const taskRepo: TaskRepository = {
 
     if (data.dueDate) {
       taskData.endDate = Timestamp.fromDate(new Date(data.dueDate));
+    }
+    if (data.startDate) {
+      taskData.startDate = Timestamp.fromDate(new Date(data.startDate));
+    } else if (data.dueDate) {
+      // Fallback: use dueDate as startDate if not provided
       taskData.startDate = Timestamp.fromDate(new Date(data.dueDate));
     }
 

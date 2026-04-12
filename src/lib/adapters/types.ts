@@ -53,6 +53,7 @@ export interface CreateTaskInput {
   title: string;
   description?: string;
   dueDate?: string | null;
+  startDate?: string | null;
   groupId?: string | null;
 }
 
