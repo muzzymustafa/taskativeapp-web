@@ -19,6 +19,23 @@ function toISO(val: any): string {
   return new Date(val).toISOString();
 }
 
+function mapTask(d: FirebaseFirestore.DocumentSnapshot, userId: string): Task {
+  const data = d.data()!;
+  return {
+    id: d.id,
+    title: data.taskName || data.title || "",
+    description: data.taskDescription || data.description || "",
+    status: data.status || "pending",
+    dueDate: data.endDate ? toISO(data.endDate) : data.dueDate ? toISO(data.dueDate) : null,
+    createdAt: toISO(data.createdAt),
+    updatedAt: data.lastModified ? toISO(data.lastModified) : undefined,
+    groupId: data.groupId || null,
+    groupName: data.groupName || null,
+    assignedTo: data.assignedTo || [],
+    createdByUserId: data.createdByUserId || userId,
+  };
+}
+
 // ── Tasks ──
 
 export const taskRepo: TaskRepository = {
@@ -30,22 +47,7 @@ export const taskRepo: TaskRepository = {
       .orderBy("createdAt", "desc")
       .get();
 
-    return snap.docs.map((d) => {
-      const data = d.data();
-      return {
-        id: d.id,
-        title: data.title || "",
-        description: data.description || "",
-        status: data.status || "pending",
-        dueDate: data.dueDate ? toISO(data.dueDate) : null,
-        createdAt: toISO(data.createdAt),
-        updatedAt: data.updatedAt ? toISO(data.updatedAt) : undefined,
-        groupId: data.groupId || null,
-        groupName: data.groupName || null,
-        assignedTo: data.assignedTo || [],
-        createdByUserId: data.createdByUserId || userId,
-      } satisfies Task;
-    });
+    return snap.docs.map((d) => mapTask(d, userId));
   },
 
   async getTask(userId, taskId) {
@@ -57,36 +59,36 @@ export const taskRepo: TaskRepository = {
       .get();
 
     if (!doc.exists) return null;
-    const data = doc.data()!;
-    return {
-      id: doc.id,
-      title: data.title || "",
-      description: data.description || "",
-      status: data.status || "pending",
-      dueDate: data.dueDate ? toISO(data.dueDate) : null,
-      createdAt: toISO(data.createdAt),
-      updatedAt: data.updatedAt ? toISO(data.updatedAt) : undefined,
-      groupId: data.groupId || null,
-      groupName: data.groupName || null,
-      assignedTo: data.assignedTo || [],
-      createdByUserId: data.createdByUserId || userId,
-    };
+    return mapTask(doc, userId);
   },
 
   async createTask(userId, data) {
+    // Use mobile app field names for compatibility
+    const now = Timestamp.now();
     const taskData: Record<string, any> = {
-      title: data.title,
-      description: data.description || "",
+      taskName: data.title,
+      taskDescription: data.description || "",
       status: "pending",
+      taskType: "personal",
       createdAt: FieldValue.serverTimestamp(),
-      updatedAt: FieldValue.serverTimestamp(),
+      lastModified: FieldValue.serverTimestamp(),
       createdByUserId: userId,
+      assignedTo: [userId],
       groupId: data.groupId || null,
-      groupName: null,
+      editCount: 0,
+      recurrence: "none",
+      checklist: [],
+      reminderEnabled: false,
+      reminderTime: null,
+      reminderOneHourSent: false,
+      reminderOneHourStartSent: false,
+      _loadedFromTemplate: false,
+      _templateId: null,
     };
 
     if (data.dueDate) {
-      taskData.dueDate = Timestamp.fromDate(new Date(data.dueDate));
+      taskData.endDate = Timestamp.fromDate(new Date(data.dueDate));
+      taskData.startDate = Timestamp.fromDate(new Date(data.dueDate));
     }
 
     const ref = await db
@@ -117,13 +119,13 @@ export const taskRepo: TaskRepository = {
 
   async updateTask(userId, taskId, data) {
     const update: Record<string, any> = {
-      updatedAt: FieldValue.serverTimestamp(),
+      lastModified: FieldValue.serverTimestamp(),
     };
-    if (data.title !== undefined) update.title = data.title;
-    if (data.description !== undefined) update.description = data.description;
+    if (data.title !== undefined) update.taskName = data.title;
+    if (data.description !== undefined) update.taskDescription = data.description;
     if (data.status !== undefined) update.status = data.status;
     if (data.dueDate !== undefined) {
-      update.dueDate = data.dueDate
+      update.endDate = data.dueDate
         ? Timestamp.fromDate(new Date(data.dueDate))
         : null;
     }
@@ -231,11 +233,12 @@ export const groupRepo: GroupRepository = {
       const data = d.data();
       return {
         id: d.id,
-        title: data.title || "",
-        description: data.description || "",
+        title: data.taskName || data.title || "",
+        description: data.taskDescription || data.description || "",
         status: data.status || "pending",
-        dueDate: data.dueDate ? toISO(data.dueDate) : null,
+        dueDate: data.endDate ? toISO(data.endDate) : data.dueDate ? toISO(data.dueDate) : null,
         createdAt: toISO(data.createdAt),
+        updatedAt: data.lastModified ? toISO(data.lastModified) : undefined,
         groupId,
         groupName: null,
         assignedTo: data.assignedTo || [],
