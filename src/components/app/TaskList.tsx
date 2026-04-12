@@ -16,6 +16,7 @@ export function TaskList() {
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"all" | "pending" | "done" | "cancelled">("all");
   const [search, setSearch] = useState("");
+  const [sort, setSort] = useState<"newest" | "oldest" | "dueDate">("newest");
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
   useEffect(() => { fetchTasks(); }, []);
@@ -63,6 +64,18 @@ export function TaskList() {
     return true;
   });
 
+  // Sort
+  filtered.sort((a, b) => {
+    if (sort === "oldest") return new Date(a.createdAt).getTime() - new Date(b.createdAt).getTime();
+    if (sort === "dueDate") {
+      if (!a.dueDate && !b.dueDate) return 0;
+      if (!a.dueDate) return 1;
+      if (!b.dueDate) return -1;
+      return new Date(a.dueDate).getTime() - new Date(b.dueDate).getTime();
+    }
+    return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+  });
+
   const pendingCount = tasks.filter((t) => t.status === "pending" || t.status === "late").length;
   const doneCount = tasks.filter((t) => t.status === "done").length;
   const cancelledCount = tasks.filter((t) => t.status === "cancelled").length;
@@ -79,7 +92,7 @@ export function TaskList() {
 
   return (
     <>
-      {/* Search */}
+      {/* Search + Sort */}
       <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-surface-1 border border-outline mb-4" style={{ boxShadow: "var(--shadow-1)" }}>
         <svg className="w-4 h-4 text-text-dim shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
@@ -98,6 +111,16 @@ export function TaskList() {
             </svg>
           </button>
         )}
+        <div className="w-px h-5 bg-outline shrink-0" />
+        <select
+          value={sort}
+          onChange={(e) => setSort(e.target.value as any)}
+          className="bg-transparent text-xs text-text-dim font-medium focus:outline-none cursor-pointer"
+        >
+          <option value="newest">Newest</option>
+          <option value="oldest">Oldest</option>
+          <option value="dueDate">Due date</option>
+        </select>
       </div>
 
       {/* Filter chips */}

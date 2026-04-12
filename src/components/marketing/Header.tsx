@@ -23,15 +23,24 @@ export function Header() {
           </a>
         </div>
 
-        <a
-          href="https://play.google.com/store/apps/details?id=com.taskative"
-          target="_blank"
-          rel="noopener noreferrer"
-          className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-primary text-white text-sm font-semibold hover:bg-primary-hover transition-colors shadow-sm"
-          style={{ transitionDuration: 'var(--dur-1)' }}
-        >
-          {t("download")}
-        </a>
+        <div className="flex items-center gap-3">
+          <a
+            href="/login"
+            className="hidden sm:inline-flex items-center text-sm text-text-muted hover:text-primary transition-colors font-medium"
+            style={{ transitionDuration: 'var(--dur-1)' }}
+          >
+            Sign in
+          </a>
+          <a
+            href="https://play.google.com/store/apps/details?id=com.taskative"
+            target="_blank"
+            rel="noopener noreferrer"
+            className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-primary text-white text-sm font-semibold hover:bg-primary-hover transition-colors shadow-sm"
+            style={{ transitionDuration: 'var(--dur-1)' }}
+          >
+            {t("download")}
+          </a>
+        </div>
       </nav>
     </header>
   );
