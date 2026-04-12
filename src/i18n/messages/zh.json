@@ -1,0 +1,83 @@
+{
+  "header": {
+    "features": "功能",
+    "pricing": "定价",
+    "download": "下载"
+  },
+  "hero": {
+    "badge": "可在 Google Play 下载",
+    "title1": "团队任务管理",
+    "title2": "简单高效",
+    "subtitle": "创建任务、与团队协作、跟踪截止日期——一切尽在一个简洁直观的应用中。",
+    "cta": "在 Google Play 下载",
+    "seeFeatures": "查看功能",
+    "stars": "在 Google Play",
+    "languages": "支持6种语言",
+    "free": "免费开始"
+  },
+  "stats": {
+    "tasks": "免费任务 / 月",
+    "languages": "种语言",
+    "ads": "广告，永远没有"
+  },
+  "features": {
+    "title1": "你需要的一切，",
+    "title2": "没有多余",
+    "subtitle": "为想要完成工作的团队而建——不用花几个小时配置另一个工具。",
+    "groupTasks": "团队任务",
+    "groupTasksDesc": "创建小组、邀请成员、共同管理任务。分配任务并跟踪进度。",
+    "reminders": "智能提醒",
+    "remindersDesc": "真正有效的通知。设置自定义提醒，再也不会错过截止日期。",
+    "templates": "模板",
+    "templatesDesc": "使用可重复使用的任务模板节省时间。创建一次，到处使用。",
+    "calendar": "日历视图",
+    "calendarDesc": "在日历中查看您的任务。规划您的日、周或月。",
+    "widget": "主屏幕小组件",
+    "widgetDesc": "从主屏幕直接快速访问您的任务。",
+    "multilang": "6种语言",
+    "multilangDesc": "提供土耳其语、英语、德语、西班牙语、阿拉伯语和中文版本。"
+  },
+  "pricing": {
+    "title1": "简单",
+    "title2": "诚实",
+    "title3": "的定价",
+    "subtitle": "免费开始，需要更多时再升级。没有隐藏费用。",
+    "free": "免费",
+    "freeDesc": "适合个人入门",
+    "forever": "永久",
+    "pro": "专业版",
+    "proDesc": "适合需要更多功能的团队",
+    "perMonth": "/月",
+    "popular": "最受欢迎",
+    "startFree": "免费开始",
+    "goPro": "升级专业版",
+    "tasksPerMonth": "每月50个任务",
+    "groups3": "3个小组",
+    "templates3": "3个模板",
+    "calendarView": "日历视图",
+    "basicReminders": "基本提醒",
+    "homeWidget": "主屏幕小组件",
+    "noAdvancedReminders": "无高级提醒",
+    "noActivityLogs": "无活动日志",
+    "archiveDays": "30天任务存档",
+    "unlimitedTasks": "无限任务",
+    "unlimitedGroups": "无限小组",
+    "unlimitedTemplates": "无限模板",
+    "advancedReminders": "高级提醒",
+    "activityLogs": "活动日志",
+    "notificationSettings": "通知设置",
+    "unlimitedArchive": "无限存档",
+    "prioritySupport": "优先支持"
+  },
+  "cta": {
+    "title": "准备好组织起来了吗？",
+    "subtitle": "免费开始——无需信用卡。",
+    "button": "在 Google Play 下载",
+    "webAppSoon": "网页应用即将推出——从浏览器管理您的任务"
+  },
+  "footer": {
+    "privacy": "隐私政策",
+    "terms": "服务条款",
+    "contact": "联系我们"
+  }
+}

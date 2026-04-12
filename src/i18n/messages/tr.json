@@ -1,0 +1,83 @@
+{
+  "header": {
+    "features": "Özellikler",
+    "pricing": "Fiyatlandırma",
+    "download": "İndir"
+  },
+  "hero": {
+    "badge": "Google Play'de mevcut",
+    "title1": "Grup görev yönetimi",
+    "title2": "artık çok kolay",
+    "subtitle": "Görevler oluşturun, ekibinizle birlikte çalışın ve teslim tarihlerini takip edin — hepsi tek bir temiz, kullanışlı uygulamada.",
+    "cta": "Google Play'den İndir",
+    "seeFeatures": "Özellikleri gör",
+    "stars": "Google Play'de",
+    "languages": "6 dil desteği",
+    "free": "Ücretsiz başla"
+  },
+  "stats": {
+    "tasks": "Ücretsiz görev / ay",
+    "languages": "Dil",
+    "ads": "Reklam, asla"
+  },
+  "features": {
+    "title1": "İhtiyacın olan her şey,",
+    "title2": "fazlası değil",
+    "subtitle": "İşlerini halletmek isteyen ekipler için — başka bir aracı yapılandırmak için saatler harcamadan.",
+    "groupTasks": "Grup Görevleri",
+    "groupTasksDesc": "Gruplar oluşturun, üyeleri davet edin ve görevleri birlikte yönetin. Görev atayın, ilerlemeyi takip edin.",
+    "reminders": "Akıllı Hatırlatmalar",
+    "remindersDesc": "Gerçekten çalışan bildirimler. Özel hatırlatıcılar ayarlayın ve hiçbir son tarihi kaçırmayın.",
+    "templates": "Şablonlar",
+    "templatesDesc": "Yeniden kullanılabilir görev şablonlarıyla zamandan tasarruf edin. Bir kez oluşturun, her yerde kullanın.",
+    "calendar": "Takvim Görünümü",
+    "calendarDesc": "Görevlerinizi takvimde görün. Gününüzü, haftanızı veya ayınızı net bir görsel genel bakışla planlayın.",
+    "widget": "Ana Ekran Widget'ı",
+    "widgetDesc": "Görevlerinize ana ekranınızdan hızlı erişim. Uygulamayı açmadan görevleri kontrol edin ve tamamlayın.",
+    "multilang": "6 Dil",
+    "multilangDesc": "Türkçe, İngilizce, Almanca, İspanyolca, Arapça ve Çince dillerinde kullanılabilir."
+  },
+  "pricing": {
+    "title1": "Basit,",
+    "title2": "dürüst",
+    "title3": "fiyatlandırma",
+    "subtitle": "Ücretsiz başlayın, daha fazlasına ihtiyaç duyduğunuzda yükseltin. Gizli ücret yok.",
+    "free": "Ücretsiz",
+    "freeDesc": "Başlangıç için bireyler",
+    "forever": "sonsuza dek",
+    "pro": "Pro",
+    "proDesc": "Daha fazlasına ihtiyaç duyan ekipler",
+    "perMonth": "/ay",
+    "popular": "En popüler",
+    "startFree": "Ücretsiz Başla",
+    "goPro": "Pro'ya Geç",
+    "tasksPerMonth": "Ayda 50 görev",
+    "groups3": "3 grup",
+    "templates3": "3 şablon",
+    "calendarView": "Takvim görünümü",
+    "basicReminders": "Temel hatırlatmalar",
+    "homeWidget": "Ana ekran widget'ı",
+    "noAdvancedReminders": "Gelişmiş hatırlatma yok",
+    "noActivityLogs": "Etkinlik günlüğü yok",
+    "archiveDays": "30 günlük görev arşivi",
+    "unlimitedTasks": "Sınırsız görev",
+    "unlimitedGroups": "Sınırsız grup",
+    "unlimitedTemplates": "Sınırsız şablon",
+    "advancedReminders": "Gelişmiş hatırlatmalar",
+    "activityLogs": "Etkinlik günlükleri",
+    "notificationSettings": "Bildirim ayarları",
+    "unlimitedArchive": "Sınırsız arşiv",
+    "prioritySupport": "Öncelikli destek"
+  },
+  "cta": {
+    "title": "Organize olmaya hazır mısınız?",
+    "subtitle": "Görevlerini Taskative ile yöneten ekiplere katılın. Ücretsiz başlayın — kredi kartı gerekmez.",
+    "button": "Google Play'den İndir",
+    "webAppSoon": "Web uygulaması yakında — görevlerinizi tarayıcınızdan yönetin"
+  },
+  "footer": {
+    "privacy": "Gizlilik Politikası",
+    "terms": "Kullanım Koşulları",
+    "contact": "İletişim"
+  }
+}

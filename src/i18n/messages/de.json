@@ -1,0 +1,83 @@
+{
+  "header": {
+    "features": "Funktionen",
+    "pricing": "Preise",
+    "download": "Herunterladen"
+  },
+  "hero": {
+    "badge": "Verfügbar bei Google Play",
+    "title1": "Gruppen-Aufgabenverwaltung",
+    "title2": "leicht gemacht",
+    "subtitle": "Erstellen Sie Aufgaben, arbeiten Sie mit Ihrem Team zusammen und behalten Sie Fristen im Blick — alles in einer übersichtlichen App.",
+    "cta": "Bei Google Play herunterladen",
+    "seeFeatures": "Funktionen ansehen",
+    "stars": "bei Google Play",
+    "languages": "6 Sprachen unterstützt",
+    "free": "Kostenlos starten"
+  },
+  "stats": {
+    "tasks": "Kostenlose Aufgaben / Monat",
+    "languages": "Sprachen",
+    "ads": "Werbung, nie"
+  },
+  "features": {
+    "title1": "Alles was Sie brauchen,",
+    "title2": "nichts Überflüssiges",
+    "subtitle": "Für Teams, die Dinge erledigen wollen — ohne stundenlange Konfiguration.",
+    "groupTasks": "Gruppenaufgaben",
+    "groupTasksDesc": "Erstellen Sie Gruppen, laden Sie Mitglieder ein und verwalten Sie Aufgaben gemeinsam.",
+    "reminders": "Intelligente Erinnerungen",
+    "remindersDesc": "Benachrichtigungen, die wirklich funktionieren. Verpassen Sie keine Frist mehr.",
+    "templates": "Vorlagen",
+    "templatesDesc": "Sparen Sie Zeit mit wiederverwendbaren Aufgabenvorlagen. Einmal erstellen, überall verwenden.",
+    "calendar": "Kalenderansicht",
+    "calendarDesc": "Sehen Sie Ihre Aufgaben im Kalender. Planen Sie Ihren Tag, Ihre Woche oder Ihren Monat.",
+    "widget": "Startbildschirm-Widget",
+    "widgetDesc": "Schneller Zugriff auf Ihre Aufgaben direkt vom Startbildschirm.",
+    "multilang": "6 Sprachen",
+    "multilangDesc": "Verfügbar auf Türkisch, Englisch, Deutsch, Spanisch, Arabisch und Chinesisch."
+  },
+  "pricing": {
+    "title1": "Einfache,",
+    "title2": "ehrliche",
+    "title3": "Preise",
+    "subtitle": "Kostenlos starten, upgraden wenn nötig. Keine versteckten Gebühren.",
+    "free": "Kostenlos",
+    "freeDesc": "Für Einzelpersonen",
+    "forever": "für immer",
+    "pro": "Pro",
+    "proDesc": "Für Teams, die mehr brauchen",
+    "perMonth": "/Monat",
+    "popular": "Beliebteste",
+    "startFree": "Kostenlos starten",
+    "goPro": "Pro werden",
+    "tasksPerMonth": "50 Aufgaben pro Monat",
+    "groups3": "3 Gruppen",
+    "templates3": "3 Vorlagen",
+    "calendarView": "Kalenderansicht",
+    "basicReminders": "Basis-Erinnerungen",
+    "homeWidget": "Startbildschirm-Widget",
+    "noAdvancedReminders": "Keine erweiterten Erinnerungen",
+    "noActivityLogs": "Keine Aktivitätsprotokolle",
+    "archiveDays": "30-Tage-Aufgabenarchiv",
+    "unlimitedTasks": "Unbegrenzte Aufgaben",
+    "unlimitedGroups": "Unbegrenzte Gruppen",
+    "unlimitedTemplates": "Unbegrenzte Vorlagen",
+    "advancedReminders": "Erweiterte Erinnerungen",
+    "activityLogs": "Aktivitätsprotokolle",
+    "notificationSettings": "Benachrichtigungseinstellungen",
+    "unlimitedArchive": "Unbegrenztes Archiv",
+    "prioritySupport": "Prioritäts-Support"
+  },
+  "cta": {
+    "title": "Bereit, organisiert zu werden?",
+    "subtitle": "Starten Sie kostenlos — keine Kreditkarte erforderlich.",
+    "button": "Bei Google Play herunterladen",
+    "webAppSoon": "Web-App kommt bald — verwalten Sie Aufgaben im Browser"
+  },
+  "footer": {
+    "privacy": "Datenschutz",
+    "terms": "Nutzungsbedingungen",
+    "contact": "Kontakt"
+  }
+}

@@ -1,26 +1,148 @@
 @import "tailwindcss";
 
+/* ── Taskative Design System ──
+   Seed: Green #4CAF50 (mobil uygulama ile tutarlı)
+   Philosophy: design.google — editorial, warm, readable
+   Light-first, dark override via prefers-color-scheme
+*/
+
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
+  /* Surfaces — light, clean, slight green tint */
+  --bg: #FAFBFA;
+  --surface-1: #FFFFFF;
+  --surface-2: #F0F5F0;
+  --surface-3: #E8F0E8;
+  --outline: #DCE5DC;
+  --outline-strong: #C0CEC0;
+
+  /* Primary — green family (matching mobile #4CAF50) */
+  --primary: #2E8B34;
+  --primary-hover: #257A2B;
+  --primary-light: #E8F5E9;
+  --primary-glow: rgba(46, 139, 52, 0.10);
+
+  /* Warmth accent — design.google editorial accent */
+  --warmth: #E8A33D;
+  --warmth-soft: #FFF4DC;
+  --warmth-deep: #A3650A;
+
+  /* Semantic */
+  --success: #10B981;
+  --success-light: #D1FAE5;
+  --warning: #F59E0B;
+  --danger: #D9344A;
+  --danger-light: #FEE8EC;
+  --info: #2196F3;
+
+  /* Text — high contrast, neutral */
+  --text: #111827;
+  --text-2: #374151;
+  --text-muted: #6B7280;
+  --text-dim: #9CA3AF;
+
+  /* Shadows — cohesive with text color */
+  --shadow-1: 0 1px 2px rgba(17, 24, 39, 0.04), 0 1px 1px rgba(17, 24, 39, 0.03);
+  --shadow-2: 0 6px 24px rgba(17, 24, 39, 0.06), 0 2px 6px rgba(17, 24, 39, 0.04);
+  --shadow-3: 0 24px 60px rgba(17, 24, 39, 0.10), 0 4px 12px rgba(17, 24, 39, 0.05);
+
+  /* Motion — design.google curve */
+  --ease: cubic-bezier(.2, .7, .2, 1);
+  --dur-1: 140ms;
+  --dur-2: 220ms;
+
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
 }
 
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
+/* Dark override */
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --bg: #111827;
+    --surface-1: #1F2937;
+    --surface-2: #283830;
+    --surface-3: #374151;
+    --outline: #4B5563;
+    --outline-strong: #6B7280;
+
+    --primary: #81C784;
+    --primary-hover: #A5D6A7;
+    --primary-light: #1A2E1C;
+    --primary-glow: rgba(129, 199, 132, 0.15);
+
+    --warmth: #FFD58E;
+    --warmth-soft: #2A2418;
+    --warmth-deep: #FFD58E;
+
+    --success: #6EE7B7;
+    --success-light: #1A2E24;
+    --warning: #FBBF24;
+    --danger: #F87171;
+    --danger-light: #2E1A1E;
+    --info: #64B5F6;
+
+    --text: #F9FAFB;
+    --text-2: #E5E7EB;
+    --text-muted: #D1D5DB;
+    --text-dim: #9CA3AF;
+
+    --shadow-1: 0 1px 2px rgba(0, 0, 0, 0.20);
+    --shadow-2: 0 6px 24px rgba(0, 0, 0, 0.25);
+    --shadow-3: 0 24px 60px rgba(0, 0, 0, 0.35);
   }
 }
 
+@theme inline {
+  --color-bg: var(--bg);
+  --color-surface-1: var(--surface-1);
+  --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
+  --color-outline: var(--outline);
+  --color-outline-strong: var(--outline-strong);
+  --color-primary: var(--primary);
+  --color-primary-hover: var(--primary-hover);
+  --color-primary-light: var(--primary-light);
+  --color-primary-glow: var(--primary-glow);
+  --color-warmth: var(--warmth);
+  --color-warmth-soft: var(--warmth-soft);
+  --color-warmth-deep: var(--warmth-deep);
+  --color-success: var(--success);
+  --color-success-light: var(--success-light);
+  --color-warning: var(--warning);
+  --color-danger: var(--danger);
+  --color-danger-light: var(--danger-light);
+  --color-info: var(--info);
+  --color-text: var(--text);
+  --color-text-2: var(--text-2);
+  --color-text-muted: var(--text-muted);
+  --color-text-dim: var(--text-dim);
+  --font-sans: var(--font-sans);
+}
+
+/* ── Base ── */
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font-sans);
+  font-variant-numeric: tabular-nums;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  line-height: 1.65;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+::selection {
+  background: var(--primary-light);
+  color: var(--primary);
+}
+
+/* ── Reduced motion ── */
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    transition-duration: 0.01ms !important;
+  }
 }

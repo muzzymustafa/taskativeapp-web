@@ -1,0 +1,83 @@
+{
+  "header": {
+    "features": "Features",
+    "pricing": "Pricing",
+    "download": "Download"
+  },
+  "hero": {
+    "badge": "Available on Google Play",
+    "title1": "Group task management",
+    "title2": "made simple",
+    "subtitle": "Create tasks, collaborate with your team, and stay on top of deadlines — all in one clean, intuitive app.",
+    "cta": "Get it on Google Play",
+    "seeFeatures": "See features",
+    "stars": "on Google Play",
+    "languages": "6 languages supported",
+    "free": "Free to start"
+  },
+  "stats": {
+    "tasks": "Free tasks / month",
+    "languages": "Languages",
+    "ads": "Ads, ever"
+  },
+  "features": {
+    "title1": "Everything you need,",
+    "title2": "nothing you don't",
+    "subtitle": "Built for teams who want to get things done — not spend hours configuring yet another tool.",
+    "groupTasks": "Group Tasks",
+    "groupTasksDesc": "Create groups, invite members, and manage tasks together. Assign tasks, track progress, and keep everyone aligned.",
+    "reminders": "Smart Reminders",
+    "remindersDesc": "Notifications that actually work. Set custom reminders and never miss a deadline again.",
+    "templates": "Templates",
+    "templatesDesc": "Save time with reusable task templates. Create once, use everywhere — perfect for recurring workflows.",
+    "calendar": "Calendar View",
+    "calendarDesc": "See your tasks on a calendar. Plan your day, week, or month with a clear visual overview.",
+    "widget": "Home Screen Widget",
+    "widgetDesc": "Quick access to your tasks right from your home screen. Check and complete tasks without opening the app.",
+    "multilang": "6 Languages",
+    "multilangDesc": "Available in Turkish, English, German, Spanish, Arabic, and Chinese. Use Taskative in your language."
+  },
+  "pricing": {
+    "title1": "Simple,",
+    "title2": "honest",
+    "title3": "pricing",
+    "subtitle": "Start free, upgrade when you need more. No hidden fees, no surprises.",
+    "free": "Free",
+    "freeDesc": "For individuals getting started",
+    "forever": "forever",
+    "pro": "Pro",
+    "proDesc": "For teams who need more",
+    "perMonth": "/month",
+    "popular": "Most popular",
+    "startFree": "Start Free",
+    "goPro": "Go Pro",
+    "tasksPerMonth": "50 tasks per month",
+    "groups3": "3 groups",
+    "templates3": "3 templates",
+    "calendarView": "Calendar view",
+    "basicReminders": "Basic reminders",
+    "homeWidget": "Home screen widget",
+    "noAdvancedReminders": "No advanced reminders",
+    "noActivityLogs": "No activity logs",
+    "archiveDays": "30-day task archive",
+    "unlimitedTasks": "Unlimited tasks",
+    "unlimitedGroups": "Unlimited groups",
+    "unlimitedTemplates": "Unlimited templates",
+    "advancedReminders": "Advanced reminders",
+    "activityLogs": "Activity logs",
+    "notificationSettings": "Notification settings",
+    "unlimitedArchive": "Unlimited archive",
+    "prioritySupport": "Priority support"
+  },
+  "cta": {
+    "title": "Ready to get organized?",
+    "subtitle": "Join teams managing their tasks with Taskative. Start free — no credit card required.",
+    "button": "Download on Google Play",
+    "webAppSoon": "Web app coming soon — manage tasks from your browser"
+  },
+  "footer": {
+    "privacy": "Privacy Policy",
+    "terms": "Terms of Service",
+    "contact": "Contact"
+  }
+}

@@ -1,0 +1,83 @@
+{
+  "header": {
+    "features": "Funciones",
+    "pricing": "Precios",
+    "download": "Descargar"
+  },
+  "hero": {
+    "badge": "Disponible en Google Play",
+    "title1": "Gestión de tareas en grupo",
+    "title2": "simplificada",
+    "subtitle": "Crea tareas, colabora con tu equipo y cumple con los plazos — todo en una aplicación limpia e intuitiva.",
+    "cta": "Obtener en Google Play",
+    "seeFeatures": "Ver funciones",
+    "stars": "en Google Play",
+    "languages": "6 idiomas disponibles",
+    "free": "Gratis para empezar"
+  },
+  "stats": {
+    "tasks": "Tareas gratis / mes",
+    "languages": "Idiomas",
+    "ads": "Anuncios, nunca"
+  },
+  "features": {
+    "title1": "Todo lo que necesitas,",
+    "title2": "nada que no",
+    "subtitle": "Para equipos que quieren hacer las cosas — sin pasar horas configurando otra herramienta.",
+    "groupTasks": "Tareas en Grupo",
+    "groupTasksDesc": "Crea grupos, invita miembros y gestiona tareas juntos. Asigna tareas y sigue el progreso.",
+    "reminders": "Recordatorios Inteligentes",
+    "remindersDesc": "Notificaciones que realmente funcionan. No pierdas ninguna fecha límite.",
+    "templates": "Plantillas",
+    "templatesDesc": "Ahorra tiempo con plantillas reutilizables. Crea una vez, usa en todas partes.",
+    "calendar": "Vista de Calendario",
+    "calendarDesc": "Ve tus tareas en un calendario. Planifica tu día, semana o mes.",
+    "widget": "Widget de Pantalla",
+    "widgetDesc": "Acceso rápido a tus tareas desde la pantalla de inicio.",
+    "multilang": "6 Idiomas",
+    "multilangDesc": "Disponible en turco, inglés, alemán, español, árabe y chino."
+  },
+  "pricing": {
+    "title1": "Precios",
+    "title2": "honestos",
+    "title3": "y simples",
+    "subtitle": "Empieza gratis, mejora cuando necesites más. Sin cargos ocultos.",
+    "free": "Gratis",
+    "freeDesc": "Para individuos que comienzan",
+    "forever": "para siempre",
+    "pro": "Pro",
+    "proDesc": "Para equipos que necesitan más",
+    "perMonth": "/mes",
+    "popular": "Más popular",
+    "startFree": "Empezar Gratis",
+    "goPro": "Ir a Pro",
+    "tasksPerMonth": "50 tareas por mes",
+    "groups3": "3 grupos",
+    "templates3": "3 plantillas",
+    "calendarView": "Vista de calendario",
+    "basicReminders": "Recordatorios básicos",
+    "homeWidget": "Widget de pantalla",
+    "noAdvancedReminders": "Sin recordatorios avanzados",
+    "noActivityLogs": "Sin registro de actividad",
+    "archiveDays": "Archivo de 30 días",
+    "unlimitedTasks": "Tareas ilimitadas",
+    "unlimitedGroups": "Grupos ilimitados",
+    "unlimitedTemplates": "Plantillas ilimitadas",
+    "advancedReminders": "Recordatorios avanzados",
+    "activityLogs": "Registros de actividad",
+    "notificationSettings": "Ajustes de notificación",
+    "unlimitedArchive": "Archivo ilimitado",
+    "prioritySupport": "Soporte prioritario"
+  },
+  "cta": {
+    "title": "¿Listo para organizarte?",
+    "subtitle": "Empieza gratis — no se requiere tarjeta de crédito.",
+    "button": "Descargar en Google Play",
+    "webAppSoon": "App web próximamente — gestiona tareas desde tu navegador"
+  },
+  "footer": {
+    "privacy": "Política de Privacidad",
+    "terms": "Términos de Servicio",
+    "contact": "Contacto"
+  }
+}
