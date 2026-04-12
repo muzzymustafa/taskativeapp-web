@@ -1,26 +1,30 @@
 import NextAuth from "next-auth";
-import CredentialsProvider from "next-auth/providers/credentials";
+import Credentials from "next-auth/providers/credentials";
 import { auth } from "@/lib/firebase/admin";
 
 export const { handlers, signIn, signOut, auth: getSession } = NextAuth({
   providers: [
-    CredentialsProvider({
-      name: "Firebase",
+    Credentials({
       credentials: {
-        idToken: { label: "ID Token", type: "text" },
+        idToken: {},
       },
       async authorize(credentials) {
-        const idToken = credentials?.idToken as string;
-        if (!idToken) return null;
+        const idToken = credentials?.idToken;
+        if (!idToken || typeof idToken !== "string") {
+          console.log("[AUTH] No idToken provided");
+          return null;
+        }
 
         try {
           const decoded = await auth.verifyIdToken(idToken);
+          console.log("[AUTH] Verified user:", decoded.uid, decoded.email);
           return {
             id: decoded.uid,
             email: decoded.email || "",
             name: decoded.name || decoded.email || "",
           };
-        } catch {
+        } catch (err) {
+          console.error("[AUTH] verifyIdToken failed:", err);
           return null;
         }
       },
@@ -47,4 +51,5 @@ export const { handlers, signIn, signOut, auth: getSession } = NextAuth({
     signIn: "/login",
   },
   secret: process.env.NEXTAUTH_SECRET,
+  trustHost: true,
 });
