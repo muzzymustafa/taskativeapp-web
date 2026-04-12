@@ -7,6 +7,7 @@ import { Logo } from "@/components/marketing/Logo";
 import { TaskList } from "@/components/app/TaskList";
 import { CreateTaskForm } from "@/components/app/CreateTaskForm";
 import { SmartImport } from "@/components/app/SmartImport";
+import { ExportButton } from "@/components/app/ExportButton";
 import { UserMenu } from "@/components/app/UserMenu";
 import type { UserProfile, Task } from "@/lib/adapters/types";
 
@@ -102,8 +103,11 @@ export default function DashboardPage() {
           </div>
         )}
 
-        {/* Smart import + Create task */}
-        <SmartImport onImported={() => setRefreshKey((k) => k + 1)} />
+        {/* Tools row */}
+        <div className="flex items-center justify-between mb-2">
+          <SmartImport onImported={() => setRefreshKey((k) => k + 1)} />
+          <ExportButton />
+        </div>
         <CreateTaskForm onCreated={() => setRefreshKey((k) => k + 1)} />
 
         {/* Task list */}
