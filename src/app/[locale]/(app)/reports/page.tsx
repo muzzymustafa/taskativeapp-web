@@ -112,6 +112,7 @@ export default function ReportsPage() {
           <div className="flex items-center gap-3">
             <a href="/dashboard" className="text-sm text-text-muted hover:text-text transition-colors">Tasks</a>
             <a href="/calendar" className="text-sm text-text-muted hover:text-text transition-colors">Calendar</a>
+            <a href="/timeline" className="text-sm text-text-muted hover:text-text transition-colors">Timeline</a>
             <a href="/groups" className="text-sm text-text-muted hover:text-text transition-colors">Groups</a>
             <a href="/reports" className="text-sm font-medium text-primary">Reports</a>
             <div className="w-px h-5 bg-outline mx-1" />
