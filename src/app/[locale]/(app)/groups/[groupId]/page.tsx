@@ -56,7 +56,7 @@ export default function GroupDetailPage() {
   return (
     <div className="min-h-screen bg-bg">
       <header className="sticky top-0 z-50 bg-surface-1/85 backdrop-blur-xl backdrop-saturate-150 border-b border-outline">
-        <div className="max-w-3xl mx-auto flex items-center justify-between px-6 h-14">
+        <div className="max-w-4xl mx-auto flex items-center justify-between px-6 h-14">
           <Logo size="sm" />
           <div className="flex items-center gap-3">
             <a href="/dashboard" className="text-sm text-text-muted hover:text-text transition-colors">Tasks</a>
@@ -67,7 +67,7 @@ export default function GroupDetailPage() {
         </div>
       </header>
 
-      <main className="max-w-3xl mx-auto px-6 py-8">
+      <main className="max-w-4xl mx-auto px-6 py-8">
         {loading ? (
           <div className="space-y-3">
             <div className="h-8 w-48 rounded-lg bg-surface-2 animate-pulse" />
