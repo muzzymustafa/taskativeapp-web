@@ -88,10 +88,19 @@ export default function CalendarPage() {
       </header>
 
       <main className="max-w-5xl mx-auto px-6 py-8">
-        {/* Month nav */}
+        {/* Month nav + view toggle */}
         <div className="flex items-center justify-between mb-6">
           <h1 className="text-xl font-semibold text-text">{monthName}</h1>
-          <div className="flex items-center gap-1">
+          <div className="flex items-center gap-2">
+            {/* View toggle */}
+            <div className="flex items-center gap-1 p-1 rounded-lg bg-surface-2 mr-2">
+              <button className="px-3 py-1 rounded text-xs font-medium bg-surface-1 text-primary shadow-sm">
+                Calendar
+              </button>
+              <a href="/timeline" className="px-3 py-1 rounded text-xs font-medium text-text-muted hover:text-text transition-colors">
+                Timeline
+              </a>
+            </div>
             <button onClick={prevMonth} className="p-2 rounded-lg hover:bg-surface-2 text-text-muted transition-colors">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 19.5L8.25 12l7.5-7.5" />

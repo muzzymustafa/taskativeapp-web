@@ -130,6 +130,15 @@ export default function TimelinePage() {
             <p className="text-sm text-text-dim mt-0.5">{rangeLabel}</p>
           </div>
           <div className="flex items-center gap-2">
+            {/* View toggle */}
+            <div className="flex items-center gap-1 p-1 rounded-lg bg-surface-2 mr-1">
+              <a href="/calendar" className="px-3 py-1 rounded text-xs font-medium text-text-muted hover:text-text transition-colors">
+                Calendar
+              </a>
+              <button className="px-3 py-1 rounded text-xs font-medium bg-surface-1 text-primary shadow-sm">
+                Timeline
+              </button>
+            </div>
             {/* Scale toggle */}
             <div className="flex items-center gap-1 p-1 rounded-lg bg-surface-2">
               <button

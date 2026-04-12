@@ -20,10 +20,10 @@ export default function NotFound() {
               Go home
             </Link>
             <Link
-              href="/dashboard"
+              href="/timeline"
               className="px-6 py-3 rounded-full border border-[#C0CEC0] text-[#374151] font-medium text-sm hover:border-[#2E8B34] hover:text-[#2E8B34] transition-colors"
             >
-              Open dashboard
+              Open app
             </Link>
           </div>
         </div>

@@ -57,7 +57,7 @@ export default function LoginPage() {
       if (result?.error) {
         setError("Session creation failed. Please try again.");
       } else {
-        window.location.replace("/dashboard");
+        window.location.replace("/timeline");
       }
     } catch (err: any) {
       setError(err.message || "Network error. Please try again.");
@@ -87,7 +87,7 @@ export default function LoginPage() {
       if (res?.error) {
         setError("Google login failed.");
       } else {
-        window.location.replace("/dashboard");
+        window.location.replace("/timeline");
       }
     } catch (err: any) {
       if (err.code === "auth/popup-closed-by-user") {
