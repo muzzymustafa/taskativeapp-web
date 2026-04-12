@@ -14,7 +14,7 @@ const statusConfig: Record<string, { border: string; badge: string; badgeText: s
 export function TaskList() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
-  const [filter, setFilter] = useState<"all" | "pending" | "done">("all");
+  const [filter, setFilter] = useState<"all" | "pending" | "done" | "cancelled">("all");
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
   useEffect(() => { fetchTasks(); }, []);
@@ -51,11 +51,13 @@ export function TaskList() {
   const filtered = tasks.filter((t) => {
     if (filter === "pending") return t.status === "pending" || t.status === "late";
     if (filter === "done") return t.status === "done";
+    if (filter === "cancelled") return t.status === "cancelled";
     return t.status !== "cancelled";
   });
 
   const pendingCount = tasks.filter((t) => t.status === "pending" || t.status === "late").length;
   const doneCount = tasks.filter((t) => t.status === "done").length;
+  const cancelledCount = tasks.filter((t) => t.status === "cancelled").length;
 
   if (loading) {
     return (
@@ -75,6 +77,7 @@ export function TaskList() {
           { key: "all" as const, label: "All", count: tasks.filter((t) => t.status !== "cancelled").length },
           { key: "pending" as const, label: "Active", count: pendingCount },
           { key: "done" as const, label: "Done", count: doneCount },
+          ...(cancelledCount > 0 ? [{ key: "cancelled" as const, label: "Cancelled", count: cancelledCount }] : []),
         ]).map((f) => (
           <button
             key={f.key}
