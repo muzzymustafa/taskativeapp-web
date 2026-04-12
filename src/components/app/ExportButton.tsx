@@ -12,21 +12,31 @@ export function ExportButton() {
     return res.json();
   }
 
-  async function exportCSV() {
+  async function exportCSV(includeAll: boolean) {
     setExporting(true);
     try {
-      const tasks = await fetchTasks();
-      const headers = ["Title", "Description", "Status", "Due Date", "Created"];
-      const rows = tasks.map((t: any) => [
-        `"${(t.title || "").replace(/"/g, '""')}"`,
-        `"${(t.description || "").replace(/"/g, '""')}"`,
-        t.status,
-        t.dueDate ? new Date(t.dueDate).toLocaleDateString() : "",
-        new Date(t.createdAt).toLocaleDateString(),
-      ]);
+      let tasks = await fetchTasks();
+      if (!includeAll) tasks = tasks.filter((t: any) => t.status !== "cancelled");
 
-      const csv = [headers.join(","), ...rows.map((r: string[]) => r.join(","))].join("\n");
-      download(csv, "taskative-tasks.csv", "text/csv");
+      const headers = ["Title", "Description", "Status", "Due Date", "Created", "Checklist", "Type"];
+      const rows = tasks.map((t: any) => {
+        const checklist = (t.checklist || [])
+          .map((c: any) => `${c.done ? "[x]" : "[ ]"} ${c.text}`)
+          .join("; ");
+        return [
+          `"${(t.title || "").replace(/"/g, '""')}"`,
+          `"${(t.description || "").replace(/"/g, '""')}"`,
+          t.status,
+          t.dueDate ? new Date(t.dueDate).toLocaleDateString("en-GB") : "",
+          new Date(t.createdAt).toLocaleDateString("en-GB"),
+          `"${checklist}"`,
+          t.taskType || "personal",
+        ];
+      });
+
+      const bom = "\uFEFF"; // UTF-8 BOM for Excel Turkish chars
+      const csv = bom + [headers.join(","), ...rows.map((r: string[]) => r.join(","))].join("\n");
+      download(csv, `taskative-tasks-${today()}.csv`, "text/csv;charset=utf-8");
     } catch { /* */ }
     setExporting(false);
     setOpen(false);
@@ -36,18 +46,25 @@ export function ExportButton() {
     setExporting(true);
     try {
       const tasks = await fetchTasks();
-      const clean = tasks.map((t: any) => ({
-        title: t.title,
-        description: t.description || "",
-        status: t.status,
-        dueDate: t.dueDate || null,
-        createdAt: t.createdAt,
-        checklist: t.checklist || [],
-      }));
-      download(JSON.stringify(clean, null, 2), "taskative-tasks.json", "application/json");
+      const clean = tasks
+        .filter((t: any) => t.status !== "cancelled")
+        .map((t: any) => ({
+          title: t.title,
+          description: t.description || "",
+          status: t.status,
+          dueDate: t.dueDate || null,
+          createdAt: t.createdAt,
+          checklist: t.checklist || [],
+          taskType: t.taskType || "personal",
+        }));
+      download(JSON.stringify(clean, null, 2), `taskative-tasks-${today()}.json`, "application/json");
     } catch { /* */ }
     setExporting(false);
     setOpen(false);
+  }
+
+  function today() {
+    return new Date().toISOString().split("T")[0];
   }
 
   function download(content: string, filename: string, type: string) {
@@ -76,14 +93,22 @@ export function ExportButton() {
       {open && (
         <>
           <div className="fixed inset-0 z-40" onClick={() => setOpen(false)} />
-          <div className="absolute right-0 top-full mt-1 z-50 w-40 bg-surface-1 border border-outline rounded-xl overflow-hidden" style={{ boxShadow: "var(--shadow-2)" }}>
+          <div className="absolute right-0 top-full mt-1 z-50 w-48 bg-surface-1 border border-outline rounded-xl overflow-hidden" style={{ boxShadow: "var(--shadow-2)" }}>
             <button
-              onClick={exportCSV}
+              onClick={() => exportCSV(false)}
               disabled={exporting}
               className="w-full text-left px-4 py-2.5 text-sm text-text hover:bg-surface-2 transition-colors flex items-center gap-2"
             >
               <span className="text-xs font-mono text-text-dim">.csv</span>
-              CSV Spreadsheet
+              Active tasks
+            </button>
+            <button
+              onClick={() => exportCSV(true)}
+              disabled={exporting}
+              className="w-full text-left px-4 py-2.5 text-sm text-text hover:bg-surface-2 transition-colors flex items-center gap-2 border-t border-outline/50"
+            >
+              <span className="text-xs font-mono text-text-dim">.csv</span>
+              All tasks
             </button>
             <button
               onClick={exportJSON}
@@ -91,7 +116,7 @@ export function ExportButton() {
               className="w-full text-left px-4 py-2.5 text-sm text-text hover:bg-surface-2 transition-colors flex items-center gap-2 border-t border-outline/50"
             >
               <span className="text-xs font-mono text-text-dim">.json</span>
-              JSON Data
+              JSON (active)
             </button>
           </div>
         </>
