@@ -48,26 +48,56 @@ function mapTask(d: any, userId: string): Task {
 
 export const taskRepo: TaskRepository = {
   async getUserTasks(userId) {
-    const snap = await db
+    // Personal tasks
+    const personalSnap = await db
       .collection("usertasks")
       .doc(userId)
       .collection("tasks")
       .orderBy("createdAt", "desc")
       .get();
 
-    return snap.docs.map((d) => mapTask(d, userId));
+    const tasks: Task[] = personalSnap.docs.map((d) => mapTask(d, userId));
+
+    // Group tasks (where user is assigned)
+    const userGroupsDoc = await db.collection("usergroups").doc(userId).get();
+    if (userGroupsDoc.exists) {
+      const groupsData = userGroupsDoc.data() || {};
+      const groupIds = Object.values(groupsData).map((g: any) => g.groupId).filter(Boolean);
+      for (const gId of groupIds) {
+        try {
+          const groupTasksSnap = await db
+            .collection("groups")
+            .doc(gId)
+            .collection("tasks")
+            .where("assignedTo", "array-contains", userId)
+            .get();
+          groupTasksSnap.docs.forEach((d) => tasks.push(mapTask(d, userId)));
+        } catch { /* skip group on error */ }
+      }
+    }
+
+    // Sort all by createdAt desc
+    tasks.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    return tasks;
   },
 
   async getTask(userId, taskId) {
-    const doc = await db
-      .collection("usertasks")
-      .doc(userId)
-      .collection("tasks")
-      .doc(taskId)
-      .get();
+    // Personal first
+    const personalRef = db.collection("usertasks").doc(userId).collection("tasks").doc(taskId);
+    const personalDoc = await personalRef.get();
+    if (personalDoc.exists) return mapTask(personalDoc, userId);
 
-    if (!doc.exists) return null;
-    return mapTask(doc, userId);
+    // Group tasks
+    const userGroupsDoc = await db.collection("usergroups").doc(userId).get();
+    if (userGroupsDoc.exists) {
+      const groupsData = userGroupsDoc.data() || {};
+      const groupIds = Object.values(groupsData).map((g: any) => g.groupId).filter(Boolean);
+      for (const gId of groupIds) {
+        const groupTaskDoc = await db.collection("groups").doc(gId).collection("tasks").doc(taskId).get();
+        if (groupTaskDoc.exists) return mapTask(groupTaskDoc, userId);
+      }
+    }
+    return null;
   },
 
   async createTask(userId, data, userEmail?: string) {
@@ -206,21 +236,34 @@ export const taskRepo: TaskRepository = {
       }
     }
 
-    await db
-      .collection("usertasks")
-      .doc(userId)
-      .collection("tasks")
-      .doc(taskId)
-      .update(update);
+    // Try personal tasks first, then search in groups the user is a member of
+    const personalRef = db.collection("usertasks").doc(userId).collection("tasks").doc(taskId);
+    const personalDoc = await personalRef.get();
+    if (personalDoc.exists) {
+      await personalRef.update(update);
+      return;
+    }
+
+    // Search in groups
+    const userGroupsDoc = await db.collection("usergroups").doc(userId).get();
+    if (userGroupsDoc.exists) {
+      const groupsData = userGroupsDoc.data() || {};
+      const groupIds = Object.values(groupsData).map((g: any) => g.groupId).filter(Boolean);
+      for (const gId of groupIds) {
+        const groupTaskRef = db.collection("groups").doc(gId).collection("tasks").doc(taskId);
+        const groupTaskDoc = await groupTaskRef.get();
+        if (groupTaskDoc.exists) {
+          await groupTaskRef.update(update);
+          return;
+        }
+      }
+    }
+    throw new Error("Task not found");
   },
 
   async deleteTask(userId, taskId) {
-    await db
-      .collection("usertasks")
-      .doc(userId)
-      .collection("tasks")
-      .doc(taskId)
-      .update({ status: "cancelled", updatedAt: FieldValue.serverTimestamp() });
+    // Reuse updateTask's search logic by passing status: cancelled
+    await this.updateTask(userId, taskId, { status: "cancelled" });
   },
 };
 

@@ -5,6 +5,7 @@ import { useSession } from "next-auth/react";
 import { useRouter, useParams } from "next/navigation";
 import { Logo } from "@/components/marketing/Logo";
 import { UserMenu } from "@/components/app/UserMenu";
+import { TaskDetail } from "@/components/app/TaskDetail";
 import type { Task, GroupMember } from "@/lib/adapters/types";
 
 interface GroupDetail {
@@ -27,6 +28,7 @@ export default function GroupDetailPage() {
   const [filter, setFilter] = useState<"all" | "pending" | "done">("all");
   const [newTask, setNewTask] = useState("");
   const [creating, setCreating] = useState(false);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
   useEffect(() => {
     if (status === "unauthenticated") router.push("/login");
@@ -267,9 +269,11 @@ export default function GroupDetailPage() {
                   const isOverdue = task.status === "pending" && task.dueDate && new Date(task.dueDate) < now;
                   const borderColor = task.status === "done" ? "border-l-success" : isOverdue ? "border-l-danger" : "border-l-warmth";
                   return (
-                    <div
+                    <button
                       key={task.id}
-                      className={`p-4 rounded-2xl bg-surface-1 border border-outline border-l-[3px] ${borderColor} hover:border-outline-strong hover:shadow-md transition-all`}
+                      type="button"
+                      onClick={() => setSelectedTask(task)}
+                      className={`text-left p-4 rounded-2xl bg-surface-1 border border-outline border-l-[3px] ${borderColor} hover:border-outline-strong hover:shadow-md transition-all`}
                       style={{ boxShadow: "var(--shadow-1)", transitionDuration: "var(--dur-2)" }}
                     >
                       <div className="flex items-start gap-3 mb-2">
@@ -313,13 +317,25 @@ export default function GroupDetailPage() {
                           {task.status === "done" ? "Done" : isOverdue ? "Overdue" : "Pending"}
                         </span>
                       </div>
-                    </div>
+                    </button>
                   );
                 })}
               </div>
             )}
           </>
         ) : null}
+
+        {/* Task detail modal */}
+        {selectedTask && (
+          <TaskDetail
+            task={selectedTask}
+            onClose={() => setSelectedTask(null)}
+            onUpdate={(updated) => {
+              setGroup((prev) => prev ? { ...prev, tasks: prev.tasks.map((t) => t.id === updated.id ? updated : t) } : prev);
+              setSelectedTask(updated);
+            }}
+          />
+        )}
       </main>
     </div>
   );
