@@ -27,12 +27,19 @@ function mapTask(d: any, userId: string): Task {
     description: data.taskDescription || data.description || "",
     status: data.status || "pending",
     dueDate: data.endDate ? toISO(data.endDate) : data.dueDate ? toISO(data.dueDate) : null,
+    startDate: data.startDate ? toISO(data.startDate) : null,
     createdAt: toISO(data.createdAt),
     updatedAt: data.lastModified ? toISO(data.lastModified) : undefined,
     groupId: data.groupId || null,
     groupName: data.groupName || null,
     assignedTo: data.assignedTo || [],
+    assignedEmails: data.assignedEmails || [],
     createdByUserId: data.createdByUserId || userId,
+    checklist: data.checklist || [],
+    reminderEnabled: data.reminderEnabled || false,
+    reminderTime: data.reminderTime ? toISO(data.reminderTime) : null,
+    recurrence: data.recurrence || "none",
+    taskType: data.taskType || "personal",
   };
 }
 

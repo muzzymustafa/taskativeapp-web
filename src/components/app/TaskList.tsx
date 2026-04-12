@@ -2,25 +2,13 @@
 
 import { useEffect, useState } from "react";
 import type { Task } from "@/lib/adapters/types";
-
-const statusColors: Record<string, string> = {
-  pending: "bg-warmth-soft text-warmth-deep",
-  done: "bg-success-light text-success",
-  cancelled: "bg-surface-3 text-text-dim",
-  late: "bg-danger-light text-danger",
-};
-
-const statusLabels: Record<string, string> = {
-  pending: "Pending",
-  done: "Done",
-  cancelled: "Cancelled",
-  late: "Late",
-};
+import { TaskDetail } from "./TaskDetail";
 
 export function TaskList() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"all" | "pending" | "done">("all");
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
   useEffect(() => {
     fetchTasks();
@@ -29,149 +17,177 @@ export function TaskList() {
   async function fetchTasks() {
     try {
       const res = await fetch("/api/tasks");
-      if (res.ok) {
-        const data = await res.json();
-        setTasks(data);
-      }
+      if (res.ok) setTasks(await res.json());
     } catch {
-      // ignore
+      /* ignore */
     } finally {
       setLoading(false);
     }
   }
 
-  async function toggleDone(task: Task) {
+  async function toggleDone(e: React.MouseEvent, task: Task) {
+    e.stopPropagation();
     const newStatus = task.status === "done" ? "pending" : "done";
+    setTasks((prev) =>
+      prev.map((t) => (t.id === task.id ? { ...t, status: newStatus } : t))
+    );
     await fetch(`/api/tasks/${task.id}`, {
       method: "PATCH",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({ status: newStatus }),
     });
-    setTasks((prev) =>
-      prev.map((t) => (t.id === task.id ? { ...t, status: newStatus } : t))
-    );
   }
 
-  async function cancelTask(taskId: string) {
-    await fetch(`/api/tasks/${taskId}`, { method: "DELETE" });
-    setTasks((prev) =>
-      prev.map((t) => (t.id === taskId ? { ...t, status: "cancelled" as const } : t))
-    );
+  function updateTaskInList(updated: Task) {
+    setTasks((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
   }
 
   const filtered = tasks.filter((t) => {
     if (filter === "pending") return t.status === "pending" || t.status === "late";
     if (filter === "done") return t.status === "done";
-    return true;
+    return t.status !== "cancelled";
   });
+
+  const pendingCount = tasks.filter((t) => t.status === "pending" || t.status === "late").length;
+  const doneCount = tasks.filter((t) => t.status === "done").length;
 
   if (loading) {
     return (
-      <div className="space-y-3">
-        {[1, 2, 3].map((i) => (
-          <div key={i} className="h-16 rounded-xl bg-surface-2 animate-pulse" />
+      <div className="space-y-2">
+        {[1, 2, 3, 4].map((i) => (
+          <div key={i} className="h-14 rounded-xl bg-surface-2 animate-pulse" />
         ))}
       </div>
     );
   }
 
   return (
-    <div>
-      {/* Filters */}
-      <div className="flex gap-2 mb-6">
-        {(["all", "pending", "done"] as const).map((f) => (
+    <>
+      {/* Filter chips — Google style */}
+      <div className="flex gap-2 mb-5">
+        {([
+          { key: "all" as const, label: "All", count: tasks.filter((t) => t.status !== "cancelled").length },
+          { key: "pending" as const, label: "Pending", count: pendingCount },
+          { key: "done" as const, label: "Done", count: doneCount },
+        ]).map((f) => (
           <button
-            key={f}
-            onClick={() => setFilter(f)}
-            className={`px-4 py-1.5 rounded-full text-sm font-medium transition-colors ${
-              filter === f
-                ? "bg-primary text-white"
-                : "bg-surface-2 text-text-muted hover:text-text"
+            key={f.key}
+            onClick={() => setFilter(f.key)}
+            className={`px-4 py-1.5 rounded-lg text-sm font-medium transition-colors ${
+              filter === f.key
+                ? "bg-primary/10 text-primary border border-primary/30"
+                : "text-text-muted hover:bg-surface-2 border border-transparent"
             }`}
             style={{ transitionDuration: "var(--dur-1)" }}
           >
-            {f === "all" ? "All" : f === "pending" ? "Pending" : "Done"}
-            {f === "all" && ` (${tasks.length})`}
+            {f.label}
+            <span className="ml-1.5 text-xs opacity-70">{f.count}</span>
           </button>
         ))}
       </div>
 
       {/* Task list */}
       {filtered.length === 0 ? (
-        <div className="text-center py-16">
-          <p className="text-text-muted text-lg mb-2">No tasks yet</p>
-          <p className="text-text-dim text-sm">Create one above to get started</p>
+        <div className="text-center py-20">
+          <div className="w-16 h-16 rounded-full bg-surface-2 flex items-center justify-center mx-auto mb-4">
+            <svg className="w-8 h-8 text-text-dim" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+            </svg>
+          </div>
+          <p className="text-text-muted text-base mb-1">No tasks here</p>
+          <p className="text-text-dim text-sm">Create one to get started</p>
         </div>
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-1">
           {filtered.map((task) => (
-            <div
+            <button
               key={task.id}
-              className="flex items-center gap-4 p-4 rounded-xl bg-surface-1 border border-outline hover:border-primary/30 transition-all group"
-              style={{ boxShadow: "var(--shadow-1)", transitionDuration: "var(--dur-2)" }}
+              onClick={() => setSelectedTask(task)}
+              className="w-full flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-surface-2 transition-colors text-left group"
+              style={{ transitionDuration: "var(--dur-1)" }}
             >
               {/* Checkbox */}
-              <button
-                onClick={() => toggleDone(task)}
-                disabled={task.status === "cancelled"}
-                className={`w-5 h-5 rounded-md border-2 flex items-center justify-center shrink-0 transition-colors ${
+              <div
+                onClick={(e) => toggleDone(e, task)}
+                className={`w-[18px] h-[18px] rounded-full border-2 flex items-center justify-center shrink-0 transition-colors cursor-pointer ${
                   task.status === "done"
-                    ? "bg-success border-success"
-                    : task.status === "cancelled"
-                    ? "bg-surface-3 border-outline cursor-not-allowed"
-                    : "border-outline hover:border-primary"
+                    ? "bg-primary border-primary"
+                    : "border-outline-strong hover:border-primary"
                 }`}
               >
                 {task.status === "done" && (
-                  <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
+                  <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
                   </svg>
                 )}
-              </button>
+              </div>
 
               {/* Content */}
               <div className="flex-1 min-w-0">
-                <p className={`text-sm font-medium truncate ${
+                <p className={`text-sm leading-5 truncate ${
                   task.status === "done" ? "line-through text-text-dim" : "text-text"
                 }`}>
                   {task.title}
                 </p>
-                {task.description && (
-                  <p className="text-xs text-text-dim truncate mt-0.5">
-                    {task.description}
-                  </p>
-                )}
+                <div className="flex items-center gap-2 mt-0.5">
+                  {task.description && (
+                    <span className="text-xs text-text-dim truncate max-w-[200px]">{task.description}</span>
+                  )}
+                  {task.checklist && task.checklist.length > 0 && (
+                    <span className="text-xs text-text-dim flex items-center gap-1">
+                      <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM3.75 12h.007v.008H3.75V12zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm-.375 5.25h.007v.008H3.75v-.008zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
+                      </svg>
+                      {task.checklist.filter((c) => c.done).length}/{task.checklist.length}
+                    </span>
+                  )}
+                </div>
               </div>
 
-              {/* Due date */}
-              {task.dueDate && (
-                <span className="text-xs text-text-dim hidden sm:block">
-                  {new Date(task.dueDate).toLocaleDateString()}
-                </span>
-              )}
-
-              {/* Status badge */}
-              <span className={`px-2 py-0.5 rounded-full text-xs font-medium ${statusColors[task.status] || ""}`}>
-                {statusLabels[task.status] || task.status}
-              </span>
-
-              {/* Cancel button */}
-              {task.status === "pending" && (
-                <button
-                  onClick={() => cancelTask(task.id)}
-                  className="opacity-0 group-hover:opacity-100 text-text-dim hover:text-danger transition-all"
-                  style={{ transitionDuration: "var(--dur-1)" }}
-                  title="Cancel task"
-                >
-                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+              {/* Right side — date + indicators */}
+              <div className="flex items-center gap-2 shrink-0">
+                {task.reminderEnabled && (
+                  <svg className="w-3.5 h-3.5 text-text-dim" fill="none" stroke="currentColor" strokeWidth={1.5} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
                   </svg>
-                </button>
-              )}
-            </div>
+                )}
+                {task.dueDate && (
+                  <span className={`text-xs ${
+                    task.status !== "done" && new Date(task.dueDate) < new Date()
+                      ? "text-danger font-medium"
+                      : "text-text-dim"
+                  }`}>
+                    {formatDate(task.dueDate)}
+                  </span>
+                )}
+              </div>
+            </button>
           ))}
         </div>
       )}
-    </div>
+
+      {/* Detail modal */}
+      {selectedTask && (
+        <TaskDetail
+          task={selectedTask}
+          onClose={() => setSelectedTask(null)}
+          onUpdate={updateTaskInList}
+        />
+      )}
+    </>
   );
+}
+
+function formatDate(iso: string): string {
+  const d = new Date(iso);
+  const now = new Date();
+  const diff = d.getTime() - now.getTime();
+  const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
+
+  if (days === 0) return "Today";
+  if (days === 1) return "Tomorrow";
+  if (days === -1) return "Yesterday";
+  if (days > 0 && days < 7) return d.toLocaleDateString("en", { weekday: "short" });
+
+  return d.toLocaleDateString("en", { month: "short", day: "numeric" });
 }

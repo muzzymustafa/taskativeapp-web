@@ -1,15 +1,27 @@
+export interface ChecklistItem {
+  text: string;
+  done: boolean;
+}
+
 export interface Task {
   id: string;
   title: string;
   description?: string;
   status: "pending" | "done" | "cancelled" | "late";
   dueDate?: string | null;
+  startDate?: string | null;
   createdAt: string;
   updatedAt?: string;
   groupId?: string | null;
   groupName?: string | null;
   assignedTo?: string[];
+  assignedEmails?: string[];
   createdByUserId?: string;
+  checklist?: ChecklistItem[];
+  reminderEnabled?: boolean;
+  reminderTime?: string | null;
+  recurrence?: string;
+  taskType?: string;
 }
 
 export interface Group {
