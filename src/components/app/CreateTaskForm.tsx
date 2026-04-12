@@ -2,7 +2,7 @@
 
 import { useState } from "react";
 
-type DetailField = "date" | "repeat" | "checklist" | null;
+type DetailField = "date" | "repeat" | "checklist" | "start" | null;
 
 export function CreateTaskForm({ onCreated }: { onCreated: () => void }) {
   const [title, setTitle] = useState("");
@@ -11,6 +11,8 @@ export function CreateTaskForm({ onCreated }: { onCreated: () => void }) {
   const [activeField, setActiveField] = useState<DetailField>(null);
 
   const [description, setDescription] = useState("");
+  const [startDate, setStartDate] = useState("");
+  const [startTime, setStartTime] = useState("");
   const [dueDate, setDueDate] = useState("");
   const [dueTime, setDueTime] = useState("");
   const [recurrence, setRecurrence] = useState("none");
@@ -33,6 +35,8 @@ export function CreateTaskForm({ onCreated }: { onCreated: () => void }) {
   function reset() {
     setTitle("");
     setDescription("");
+    setStartDate("");
+    setStartTime("");
     setDueDate("");
     setDueTime("");
     setRecurrence("none");
@@ -54,6 +58,7 @@ export function CreateTaskForm({ onCreated }: { onCreated: () => void }) {
         body: JSON.stringify({
           title: title.trim(),
           description: description.trim() || undefined,
+          startDate: buildISO(startDate, startTime),
           dueDate: buildISO(dueDate, dueTime),
           recurrence: recurrence !== "none" ? recurrence : undefined,
           checklist: checklist.length > 0 ? checklist.map((text) => ({ text, done: false })) : undefined,
@@ -129,6 +134,16 @@ export function CreateTaskForm({ onCreated }: { onCreated: () => void }) {
           {/* Chip toolbar */}
           <div className="flex flex-wrap gap-2">
             <Chip
+              active={activeField === "start" || !!startDate}
+              onClick={() => toggleField("start")}
+              icon={
+                <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z" />
+                </svg>
+              }
+              label={startDate ? `Start · ${new Date(startDate).toLocaleDateString("en", { month: "short", day: "numeric" })}` : "Start"}
+            />
+            <Chip
               active={activeField === "date" || !!dueDate}
               onClick={() => toggleField("date")}
               icon={
@@ -136,7 +151,7 @@ export function CreateTaskForm({ onCreated }: { onCreated: () => void }) {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
                 </svg>
               }
-              label={dueDate ? new Date(dueDate).toLocaleDateString("en", { month: "short", day: "numeric" }) : "Date"}
+              label={dueDate ? `Due · ${new Date(dueDate).toLocaleDateString("en", { month: "short", day: "numeric" })}` : "Due"}
             />
             <Chip
               active={activeField === "repeat" || recurrence !== "none"}
@@ -159,6 +174,36 @@ export function CreateTaskForm({ onCreated }: { onCreated: () => void }) {
               label={checklist.length > 0 ? `Checklist · ${checklist.length}` : "Checklist"}
             />
           </div>
+
+          {/* Start field */}
+          {activeField === "start" && (
+            <div className="flex gap-2 pt-2 border-t border-outline/50">
+              <input
+                type="date"
+                value={startDate}
+                onChange={(e) => setStartDate(e.target.value)}
+                className="flex-1 min-w-0 px-3 py-2 rounded-lg bg-surface-1 border border-outline text-xs text-text focus:outline-none focus:border-primary transition-colors"
+              />
+              <input
+                type="time"
+                value={startTime}
+                onChange={(e) => setStartTime(e.target.value)}
+                className="px-3 py-2 rounded-lg bg-surface-1 border border-outline text-xs text-text focus:outline-none focus:border-primary transition-colors"
+              />
+              {startDate && (
+                <button
+                  type="button"
+                  onClick={() => { setStartDate(""); setStartTime(""); setActiveField(null); }}
+                  className="px-2 text-text-dim hover:text-danger transition-colors"
+                  title="Clear"
+                >
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+                  </svg>
+                </button>
+              )}
+            </div>
+          )}
 
           {/* Date field */}
           {activeField === "date" && (

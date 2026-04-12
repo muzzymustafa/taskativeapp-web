@@ -70,46 +70,48 @@ export const taskRepo: TaskRepository = {
     return mapTask(doc, userId);
   },
 
-  async createTask(userId, data) {
-    // Use mobile app field names for compatibility
-    const now = Timestamp.now();
+  async createTask(userId, data, userEmail?: string) {
+    // Use mobile app field names for full compatibility
+    const nowMs = Date.now();
     const taskData: Record<string, any> = {
       taskName: data.title,
       taskDescription: data.description || "",
       status: "pending",
       taskType: "personal",
       createdAt: FieldValue.serverTimestamp(),
+      createdAtTimestamp: nowMs,
       lastModified: FieldValue.serverTimestamp(),
       createdByUserId: userId,
+      createdBy_userEmail: userEmail || "",
       assignedTo: [userId],
+      assignedEmails: userEmail ? [userEmail] : [],
       groupId: data.groupId || null,
       editCount: 0,
-      recurrence: "none",
-      checklist: [],
+      recurrence: data.recurrence && data.recurrence !== "none" ? data.recurrence : "none",
+      checklist: data.checklist && data.checklist.length > 0 ? data.checklist : [],
       reminderEnabled: false,
       reminderTime: null,
       reminderOneHourSent: false,
       reminderOneHourStartSent: false,
       _loadedFromTemplate: false,
       _templateId: null,
+      _usedQuickDate: null,
       createdFrom: "web",
     };
 
-    if (data.recurrence && data.recurrence !== "none") {
-      taskData.recurrence = data.recurrence;
-    }
-    if (data.checklist && data.checklist.length > 0) {
-      taskData.checklist = data.checklist;
-    }
-
+    // Dates
     if (data.dueDate) {
-      taskData.endDate = Timestamp.fromDate(new Date(data.dueDate));
+      const due = new Date(data.dueDate);
+      taskData.endDate = Timestamp.fromDate(due);
+      taskData.dueTimestamp = due.getTime();
     }
     if (data.startDate) {
       taskData.startDate = Timestamp.fromDate(new Date(data.startDate));
     } else if (data.dueDate) {
-      // Fallback: use dueDate as startDate if not provided
-      taskData.startDate = Timestamp.fromDate(new Date(data.dueDate));
+      // Fallback: use now as startDate
+      taskData.startDate = Timestamp.fromDate(new Date(nowMs));
+    } else {
+      taskData.startDate = Timestamp.fromDate(new Date(nowMs));
     }
 
     // Group task: write to groups/{groupId}/tasks
@@ -125,6 +127,13 @@ export const taskRepo: TaskRepository = {
         .doc(data.groupId)
         .collection("tasks")
         .add(taskData);
+
+      // Add self-referencing id + status_docId + uniqueKey
+      await ref.update({
+        id: ref.id,
+        status_docId: `pending_${ref.id}`,
+        uniqueKey: `${ref.id}-${nowMs}`,
+      });
 
       return {
         id: ref.id,
@@ -147,6 +156,13 @@ export const taskRepo: TaskRepository = {
       .doc(userId)
       .collection("tasks")
       .add(taskData);
+
+    // Add self-referencing id + status_docId + uniqueKey (mobile app compat)
+    await ref.update({
+      id: ref.id,
+      status_docId: `pending_${ref.id}`,
+      uniqueKey: `${ref.id}-${nowMs}`,
+    });
 
     // Increment usage counter
     await db
@@ -171,14 +187,23 @@ export const taskRepo: TaskRepository = {
   async updateTask(userId, taskId, data) {
     const update: Record<string, any> = {
       lastModified: FieldValue.serverTimestamp(),
+      editCount: FieldValue.increment(1),
     };
     if (data.title !== undefined) update.taskName = data.title;
     if (data.description !== undefined) update.taskDescription = data.description;
-    if (data.status !== undefined) update.status = data.status;
+    if (data.status !== undefined) {
+      update.status = data.status;
+      update.status_docId = `${data.status}_${taskId}`;
+    }
     if (data.dueDate !== undefined) {
-      update.endDate = data.dueDate
-        ? Timestamp.fromDate(new Date(data.dueDate))
-        : null;
+      if (data.dueDate) {
+        const due = new Date(data.dueDate);
+        update.endDate = Timestamp.fromDate(due);
+        update.dueTimestamp = due.getTime();
+      } else {
+        update.endDate = null;
+        update.dueTimestamp = null;
+      }
     }
 
     await db

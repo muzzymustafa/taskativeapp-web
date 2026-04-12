@@ -70,7 +70,7 @@ export interface UpdateTaskInput {
 export interface TaskRepository {
   getUserTasks(userId: string): Promise<Task[]>;
   getTask(userId: string, taskId: string): Promise<Task | null>;
-  createTask(userId: string, data: CreateTaskInput): Promise<Task>;
+  createTask(userId: string, data: CreateTaskInput, userEmail?: string): Promise<Task>;
   updateTask(userId: string, taskId: string, data: UpdateTaskInput): Promise<void>;
   deleteTask(userId: string, taskId: string): Promise<void>;
 }

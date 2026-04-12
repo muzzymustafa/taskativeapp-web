@@ -1,5 +1,5 @@
 import { NextRequest, NextResponse } from "next/server";
-import { getAuthUserId, unauthorized } from "@/lib/api-auth";
+import { getAuthUserId, getAuthUser, unauthorized } from "@/lib/api-auth";
 import { taskRepo } from "@/lib/adapters/firebase";
 
 // GET /api/tasks — list user's tasks
@@ -18,8 +18,8 @@ export async function GET() {
 
 // POST /api/tasks — create a task
 export async function POST(req: NextRequest) {
-  const userId = await getAuthUserId();
-  if (!userId) return unauthorized();
+  const user = await getAuthUser();
+  if (!user) return unauthorized();
 
   try {
     const body = await req.json();
@@ -29,15 +29,19 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Title is required" }, { status: 400 });
     }
 
-    const task = await taskRepo.createTask(userId, {
-      title: title.trim(),
-      description: description?.trim() || "",
-      dueDate: dueDate || null,
-      startDate: startDate || null,
-      groupId: groupId || null,
-      recurrence: recurrence || undefined,
-      checklist: Array.isArray(checklist) ? checklist : undefined,
-    });
+    const task = await taskRepo.createTask(
+      user.uid,
+      {
+        title: title.trim(),
+        description: description?.trim() || "",
+        dueDate: dueDate || null,
+        startDate: startDate || null,
+        groupId: groupId || null,
+        recurrence: recurrence || undefined,
+        checklist: Array.isArray(checklist) ? checklist : undefined,
+      },
+      user.email
+    );
 
     return NextResponse.json(task, { status: 201 });
   } catch (err: any) {
