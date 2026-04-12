@@ -117,39 +117,49 @@ export default function GroupDetailPage() {
               {group.tasks.length === 0 ? (
                 <p className="text-sm text-text-dim py-8 text-center">No tasks in this group</p>
               ) : (
-                <div className="space-y-1">
-                  {group.tasks.map((task) => (
-                    <div
-                      key={task.id}
-                      className="flex items-center gap-3 px-4 py-3 rounded-xl hover:bg-surface-2 transition-colors"
-                      style={{ transitionDuration: "var(--dur-1)" }}
-                    >
-                      <div className={`w-[18px] h-[18px] rounded-full border-2 flex items-center justify-center shrink-0 ${
-                        task.status === "done" ? "bg-primary border-primary" : "border-outline-strong"
-                      }`}>
-                        {task.status === "done" && (
-                          <svg className="w-2.5 h-2.5 text-white" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
-                            <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
-                          </svg>
-                        )}
-                      </div>
-                      <div className="flex-1 min-w-0">
-                        <p className={`text-sm truncate ${task.status === "done" ? "line-through text-text-dim" : "text-text"}`}>
-                          {task.title}
-                        </p>
-                        {task.assignedEmails && task.assignedEmails.length > 0 && (
-                          <p className="text-xs text-text-dim truncate mt-0.5">
-                            {task.assignedEmails.join(", ")}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+                  {group.tasks.map((task) => {
+                    const isOverdue = task.status === "pending" && task.dueDate && new Date(task.dueDate) < new Date();
+                    const borderColor = task.status === "done" ? "border-l-success" : isOverdue ? "border-l-danger" : "border-l-warmth";
+                    return (
+                      <div
+                        key={task.id}
+                        className={`p-4 rounded-2xl bg-surface-1 border border-outline border-l-[3px] ${borderColor}`}
+                        style={{ boxShadow: "var(--shadow-1)" }}
+                      >
+                        <div className="flex items-start gap-3 mb-2">
+                          <div className={`w-5 h-5 rounded-full border-2 flex items-center justify-center shrink-0 mt-0.5 ${
+                            task.status === "done" ? "bg-primary border-primary" : "border-outline-strong"
+                          }`}>
+                            {task.status === "done" && (
+                              <svg className="w-3 h-3 text-white" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
+                                <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />
+                              </svg>
+                            )}
+                          </div>
+                          <p className={`flex-1 text-sm font-medium line-clamp-2 ${task.status === "done" ? "line-through text-text-dim" : "text-text"}`}>
+                            {task.title}
                           </p>
-                        )}
+                        </div>
+                        <div className="flex items-center gap-2 pl-8 flex-wrap">
+                          {task.assignedEmails && task.assignedEmails.length > 0 && (
+                            <span className="text-[11px] text-text-dim truncate max-w-[150px]">
+                              {task.assignedEmails[0]}
+                              {task.assignedEmails.length > 1 && ` +${task.assignedEmails.length - 1}`}
+                            </span>
+                          )}
+                          {task.dueDate && (
+                            <span className={`inline-flex items-center gap-1 px-2 py-0.5 rounded-md text-[11px] font-medium ${isOverdue ? "bg-danger-light text-danger" : "bg-surface-2 text-text-dim"}`}>
+                              {new Date(task.dueDate).toLocaleDateString("en", { month: "short", day: "numeric" })}
+                            </span>
+                          )}
+                          <span className={`ml-auto px-2 py-0.5 rounded-md text-[11px] font-medium ${task.status === "done" ? "bg-success-light text-success" : isOverdue ? "bg-danger-light text-danger" : "bg-warmth-soft text-warmth-deep"}`}>
+                            {task.status === "done" ? "Done" : isOverdue ? "Overdue" : "Pending"}
+                          </span>
+                        </div>
                       </div>
-                      {task.dueDate && (
-                        <span className="text-xs text-text-dim">
-                          {new Date(task.dueDate).toLocaleDateString("en", { month: "short", day: "numeric" })}
-                        </span>
-                      )}
-                    </div>
-                  ))}
+                    );
+                  })}
                 </div>
               )}
             </div>

@@ -15,6 +15,7 @@ export function TaskList() {
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"all" | "pending" | "done" | "cancelled">("all");
+  const [search, setSearch] = useState("");
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
   useEffect(() => { fetchTasks(); }, []);
@@ -49,10 +50,17 @@ export function TaskList() {
   }
 
   const filtered = tasks.filter((t) => {
-    if (filter === "pending") return t.status === "pending" || t.status === "late";
-    if (filter === "done") return t.status === "done";
-    if (filter === "cancelled") return t.status === "cancelled";
-    return t.status !== "cancelled";
+    // Status filter
+    if (filter === "pending" && t.status !== "pending" && t.status !== "late") return false;
+    if (filter === "done" && t.status !== "done") return false;
+    if (filter === "cancelled" && t.status !== "cancelled") return false;
+    if (filter === "all" && t.status === "cancelled") return false;
+    // Search filter
+    if (search) {
+      const q = search.toLowerCase();
+      return t.title.toLowerCase().includes(q) || (t.description || "").toLowerCase().includes(q);
+    }
+    return true;
   });
 
   const pendingCount = tasks.filter((t) => t.status === "pending" || t.status === "late").length;
@@ -71,6 +79,27 @@ export function TaskList() {
 
   return (
     <>
+      {/* Search */}
+      <div className="flex items-center gap-2 px-3 py-2 rounded-xl bg-surface-1 border border-outline mb-4" style={{ boxShadow: "var(--shadow-1)" }}>
+        <svg className="w-4 h-4 text-text-dim shrink-0" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+          <path strokeLinecap="round" strokeLinejoin="round" d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.607 10.607z" />
+        </svg>
+        <input
+          type="text"
+          value={search}
+          onChange={(e) => setSearch(e.target.value)}
+          placeholder="Search tasks..."
+          className="flex-1 bg-transparent text-sm text-text placeholder:text-text-dim focus:outline-none"
+        />
+        {search && (
+          <button onClick={() => setSearch("")} className="text-text-dim hover:text-text">
+            <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+              <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
+            </svg>
+          </button>
+        )}
+      </div>
+
       {/* Filter chips */}
       <div className="flex gap-2 mb-5">
         {([
