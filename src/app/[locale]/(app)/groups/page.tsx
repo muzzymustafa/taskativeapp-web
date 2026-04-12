@@ -46,6 +46,7 @@ export default function GroupsPage() {
             <a href="/dashboard" className="text-sm text-text-muted hover:text-text transition-colors" style={{ transitionDuration: "var(--dur-1)" }}>
               Tasks
             </a>
+            <a href="/calendar" className="text-sm text-text-muted hover:text-text transition-colors" style={{ transitionDuration: "var(--dur-1)" }}>Calendar</a>
             <a href="/groups" className="text-sm font-medium text-primary">Groups</a>
             <a href="/reports" className="text-sm text-text-muted hover:text-text transition-colors" style={{ transitionDuration: "var(--dur-1)" }}>Reports</a>
             <div className="w-px h-5 bg-outline mx-1" />
