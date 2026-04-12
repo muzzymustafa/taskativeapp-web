@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { useTranslations } from "next-intl";
+import { Logo } from "./Logo";
 
 export function Header() {
   const t = useTranslations("header");
@@ -10,17 +10,8 @@ export function Header() {
   return (
     <header className="sticky top-0 z-50 bg-surface-1/85 backdrop-blur-xl backdrop-saturate-150 border-b border-outline">
       <nav className="max-w-6xl mx-auto flex items-center justify-between px-6 h-16">
-        <Link href="/" className="flex items-center gap-2">
-          <Image
-            src="/images/logo-icon.png"
-            alt="Taskative"
-            width={32}
-            height={32}
-            className="w-8 h-8"
-          />
-          <span className="font-semibold text-lg tracking-tight text-text">
-            Taskative
-          </span>
+        <Link href="/">
+          <Logo />
         </Link>
 
         <div className="hidden sm:flex items-center gap-8 text-sm text-text-muted">

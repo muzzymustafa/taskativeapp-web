@@ -1,8 +1,8 @@
 "use client";
 
 import Link from "next/link";
-import Image from "next/image";
 import { useTranslations } from "next-intl";
+import { Logo } from "./Logo";
 
 export function Footer() {
   const t = useTranslations("footer");
@@ -11,10 +11,7 @@ export function Footer() {
     <footer className="border-t border-outline py-12 bg-surface-1">
       <div className="max-w-6xl mx-auto px-6">
         <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
-          <div className="flex items-center gap-2">
-            <Image src="/images/logo-icon.png" alt="Taskative" width={28} height={28} className="w-7 h-7" />
-            <span className="font-semibold text-text">Taskative</span>
-          </div>
+          <Logo size="sm" />
 
           <div className="flex items-center gap-6 text-sm text-text-muted">
             <Link href="/privacy" className="hover:text-primary transition-colors" style={{ transitionDuration: 'var(--dur-1)' }}>
