@@ -19,8 +19,8 @@ function toISO(val: any): string {
   return new Date(val).toISOString();
 }
 
-function mapTask(d: FirebaseFirestore.DocumentSnapshot, userId: string): Task {
-  const data = d.data()!;
+function mapTask(d: any, userId: string): Task {
+  const data = d.data() || {};
   return {
     id: d.id,
     title: data.taskName || data.title || "",
