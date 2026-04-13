@@ -15,10 +15,44 @@ export default function CalendarPage() {
   const [loading, setLoading] = useState(true);
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
+  const [dragOverDay, setDragOverDay] = useState<string | null>(null);
 
   useEffect(() => {
     if (status === "unauthenticated") router.push("/login");
   }, [status, router]);
+
+  function dayKey(d: Date) {
+    return `${d.getFullYear()}-${d.getMonth()}-${d.getDate()}`;
+  }
+
+  async function handleDrop(taskId: string, newDay: Date) {
+    setDragOverDay(null);
+    const task = tasks.find((t) => t.id === taskId);
+    if (!task) return;
+
+    // Preserve original time, only change date
+    const oldDate = task.dueDate ? new Date(task.dueDate) : new Date();
+    const newDate = new Date(newDay);
+    newDate.setHours(oldDate.getHours(), oldDate.getMinutes(), 0, 0);
+    if (oldDate.getHours() === 0 && oldDate.getMinutes() === 0) {
+      newDate.setHours(23, 59);
+    }
+
+    const newDueISO = newDate.toISOString();
+    // Optimistic update
+    setTasks((prev) => prev.map((t) => (t.id === taskId ? { ...t, dueDate: newDueISO } : t)));
+
+    try {
+      await fetch(`/api/tasks/${taskId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ dueDate: newDueISO }),
+      });
+    } catch {
+      // Revert on error
+      setTasks((prev) => prev.map((t) => (t.id === taskId ? task : t)));
+    }
+  }
 
   useEffect(() => {
     if (status === "authenticated") {
@@ -131,12 +165,25 @@ export default function CalendarPage() {
                 const isSelected = selectedDay && isSameDay(day, selectedDay);
                 const overdue = dayTasks.some((t) => t.status === "pending" && day < today && !isToday);
 
+                const dKey = dayKey(day);
+                const isDragOver = dragOverDay === dKey;
                 return (
-                  <button
+                  <div
                     key={i}
                     onClick={() => setSelectedDay(day)}
-                    className={`min-h-[90px] border-b border-r border-outline/30 p-2 text-left transition-colors hover:bg-surface-2 ${
-                      isSelected ? "bg-primary/5" : ""
+                    onDragOver={(e) => { e.preventDefault(); setDragOverDay(dKey); }}
+                    onDragLeave={() => setDragOverDay(null)}
+                    onDrop={(e) => {
+                      e.preventDefault();
+                      const taskId = e.dataTransfer.getData("text/taskId");
+                      if (taskId) handleDrop(taskId, day);
+                    }}
+                    className={`min-h-[90px] border-b border-r border-outline/30 p-2 text-left cursor-pointer transition-all ${
+                      isDragOver
+                        ? "bg-primary/15 ring-2 ring-primary ring-inset"
+                        : isSelected
+                        ? "bg-primary/5"
+                        : "hover:bg-surface-2"
                     }`}
                   >
                     <div className="flex items-center justify-between mb-1">
@@ -155,13 +202,20 @@ export default function CalendarPage() {
                       {dayTasks.slice(0, 2).map((t) => (
                         <div
                           key={t.id}
-                          className={`text-[10px] px-1.5 py-0.5 rounded truncate ${
+                          draggable
+                          onDragStart={(e) => {
+                            e.stopPropagation();
+                            e.dataTransfer.setData("text/taskId", t.id);
+                            e.dataTransfer.effectAllowed = "move";
+                          }}
+                          className={`text-[10px] px-1.5 py-0.5 rounded truncate cursor-grab active:cursor-grabbing ${
                             t.status === "done"
                               ? "bg-success-light text-success line-through"
                               : t.status === "pending" && day < today && !isToday
                               ? "bg-danger-light text-danger"
                               : "bg-warmth-soft text-warmth-deep"
                           }`}
+                          title={t.title}
                         >
                           {t.title}
                         </div>
@@ -170,7 +224,7 @@ export default function CalendarPage() {
                         <div className="text-[10px] text-text-dim">+{dayTasks.length - 2} more</div>
                       )}
                     </div>
-                  </button>
+                  </div>
                 );
               })}
             </div>

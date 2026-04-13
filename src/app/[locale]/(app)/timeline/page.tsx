@@ -19,6 +19,8 @@ export default function TimelinePage() {
   const [scale, setScale] = useState<Scale>("month");
   const [anchor, setAnchor] = useState(new Date());
   const [selectedTask, setSelectedTask] = useState<Task | null>(null);
+  const [draggingTaskId, setDraggingTaskId] = useState<string | null>(null);
+  const [dropPreview, setDropPreview] = useState<{ taskId: string; left: number } | null>(null);
 
   useEffect(() => {
     if (status === "unauthenticated") router.push("/login");
@@ -89,6 +91,35 @@ export default function TimelinePage() {
     const left = (startOffset / rangeMs) * 100;
     const width = Math.max(2, ((endOffset - startOffset) / rangeMs) * 100);
     return { left, width };
+  }
+
+  async function moveTaskByDays(taskId: string, daysDelta: number) {
+    if (daysDelta === 0) return;
+    const task = tasks.find((t) => t.id === taskId);
+    if (!task || !task.dueDate) return;
+
+    const newDue = new Date(task.dueDate);
+    newDue.setDate(newDue.getDate() + daysDelta);
+    let newStart: Date | null = null;
+    if (task.startDate) {
+      newStart = new Date(task.startDate);
+      newStart.setDate(newStart.getDate() + daysDelta);
+    }
+
+    const newDueISO = newDue.toISOString();
+    const newStartISO = newStart?.toISOString() || null;
+
+    setTasks((prev) => prev.map((t) => t.id === taskId ? { ...t, dueDate: newDueISO, startDate: newStartISO || t.startDate } : t));
+
+    try {
+      await fetch(`/api/tasks/${taskId}`, {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ dueDate: newDueISO }),
+      });
+    } catch {
+      setTasks((prev) => prev.map((t) => (t.id === taskId ? task : t)));
+    }
   }
 
   function shiftRange(dir: -1 | 1) {
@@ -210,34 +241,61 @@ export default function TimelinePage() {
                       ? "bg-danger"
                       : "bg-primary";
                   return (
-                    <button
+                    <div
                       key={task.id}
-                      type="button"
-                      onClick={() => setSelectedTask(task)}
                       className="flex w-full border-b border-outline/30 hover:bg-surface-2/50 transition-colors text-left"
                       style={{ transitionDuration: "var(--dur-1)" }}
                     >
-                      {/* Task label */}
-                      <div className="w-48 shrink-0 px-4 py-2.5 border-r border-outline flex items-center gap-2">
+                      {/* Task label — clickable to open detail */}
+                      <button
+                        type="button"
+                        onClick={() => setSelectedTask(task)}
+                        className="w-48 shrink-0 px-4 py-2.5 border-r border-outline flex items-center gap-2 text-left hover:bg-surface-2 transition-colors"
+                      >
                         <div className={`w-3 h-3 rounded-full shrink-0 ${
                           task.status === "done" ? "bg-primary" : isOverdue ? "bg-danger" : "bg-warmth"
                         }`} />
                         <span className={`text-xs truncate ${task.status === "done" ? "line-through text-text-dim" : "text-text"}`}>
                           {task.title}
                         </span>
-                      </div>
+                      </button>
                       {/* Timeline bar area */}
-                      <div className="flex-1 relative min-h-[36px] py-2.5">
+                      <div
+                        className="flex-1 relative min-h-[36px] py-2.5"
+                        onDragOver={(e) => e.preventDefault()}
+                        onDrop={(e) => {
+                          e.preventDefault();
+                          const taskId = e.dataTransfer.getData("text/taskId");
+                          const startLeft = parseFloat(e.dataTransfer.getData("text/startLeft") || "0");
+                          if (!taskId) return;
+                          const rect = e.currentTarget.getBoundingClientRect();
+                          const dropPercent = ((e.clientX - rect.left) / rect.width) * 100;
+                          const dayWidth = 100 / rangeDays;
+                          const daysDelta = Math.round((dropPercent - startLeft) / dayWidth);
+                          if (daysDelta !== 0) moveTaskByDays(taskId, daysDelta);
+                        }}
+                      >
                         <div
-                          className={`absolute top-1/2 -translate-y-1/2 h-5 rounded-md ${barColor} opacity-90 hover:opacity-100 transition-opacity px-2 flex items-center overflow-hidden`}
+                          draggable
+                          onDragStart={(e) => {
+                            e.dataTransfer.setData("text/taskId", task.id);
+                            e.dataTransfer.setData("text/startLeft", String(left));
+                            e.dataTransfer.effectAllowed = "move";
+                            setDraggingTaskId(task.id);
+                          }}
+                          onDragEnd={() => setDraggingTaskId(null)}
+                          className={`absolute top-1/2 -translate-y-1/2 h-5 rounded-md ${barColor} opacity-90 hover:opacity-100 transition-opacity px-2 flex items-center overflow-hidden cursor-grab active:cursor-grabbing ${
+                            draggingTaskId === task.id ? "ring-2 ring-primary opacity-60" : ""
+                          }`}
                           style={{ left: `${left}%`, width: `${width}%`, minWidth: "20px" }}
+                          title={`${task.title} — drag to reschedule`}
                         >
-                          <span className="text-[10px] font-medium text-on-primary truncate">
+                          <span className="text-[10px] font-medium text-on-primary truncate pointer-events-none">
                             {task.title}
                           </span>
                         </div>
                       </div>
-                    </button>
+                    </div>
                   );
                 })}
               </div>
