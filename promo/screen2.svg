@@ -1,0 +1,122 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1280" height="800" viewBox="0 0 1280 800">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#FAFBFA"/>
+      <stop offset="100%" stop-color="#F0F5F0"/>
+    </linearGradient>
+    <filter id="shadow">
+      <feDropShadow dx="0" dy="6" stdDeviation="16" flood-color="#2E8B34" flood-opacity="0.12"/>
+    </filter>
+  </defs>
+
+  <style>
+    text { font-family: Arial, sans-serif; }
+    .h1 { font-size: 48px; font-weight: 900; fill: #111827; letter-spacing: -1px; }
+    .h1-a { font-size: 48px; font-weight: 900; fill: #2E8B34; letter-spacing: -1px; }
+    .sub { font-size: 20px; fill: #6B7280; }
+    .brand { font-size: 22px; font-weight: 700; fill: #111827; }
+    .label { font-size: 13px; font-weight: 600; fill: #9CA3AF; text-transform: uppercase; letter-spacing: 0.8px; }
+    .task-title { font-size: 14px; font-weight: 600; fill: #111827; }
+    .task-desc { font-size: 11px; fill: #6B7280; }
+    .stat-num { font-size: 28px; font-weight: 900; fill: #2E8B34; }
+    .stat-lbl { font-size: 11px; fill: #9CA3AF; }
+    .footer { font-size: 13px; fill: #9CA3AF; }
+    .chip { font-size: 11px; font-weight: 600; }
+  </style>
+
+  <rect width="1280" height="800" fill="url(#bg)"/>
+
+  <!-- Logo + brand -->
+  <g transform="translate(80, 70)">
+    <rect x="0" y="0" width="46" height="46" rx="11" fill="#2E8B34"/>
+    <text x="23" y="32" font-size="24" font-weight="900" fill="white" text-anchor="middle">T</text>
+    <text x="60" y="32" class="brand">Taskative</text>
+  </g>
+
+  <!-- Heading -->
+  <text x="80" y="210" class="h1">Capture on the web.</text>
+  <text x="80" y="268" class="h1-a">See it everywhere.</text>
+  <text x="80" y="320" class="sub">Extension → Web app → Mobile app, in real time.</text>
+
+  <!-- Stats row -->
+  <g transform="translate(80, 380)">
+    <rect x="0" y="0" width="160" height="90" rx="16" fill="#FFFFFF" stroke="#E4E7E5"/>
+    <text x="20" y="45" class="stat-num">12</text>
+    <text x="20" y="68" class="stat-lbl">ACTIVE TASKS</text>
+
+    <g transform="translate(180, 0)">
+      <rect x="0" y="0" width="160" height="90" rx="16" fill="#FFFFFF" stroke="#E4E7E5"/>
+      <text x="20" y="45" font-size="28" font-weight="900" fill="#5EEEA0">48</text>
+      <text x="20" y="68" class="stat-lbl">COMPLETED</text>
+    </g>
+
+    <g transform="translate(360, 0)">
+      <rect x="0" y="0" width="160" height="90" rx="16" fill="#FFFFFF" stroke="#E4E7E5"/>
+      <text x="20" y="45" font-size="28" font-weight="900" fill="#E8A33D">83%</text>
+      <text x="20" y="68" class="stat-lbl">RATE</text>
+    </g>
+  </g>
+
+  <!-- Footer -->
+  <text x="80" y="720" class="footer">🔒 No ads · 🌍 6 languages · 📱 Free forever</text>
+  <text x="80" y="742" class="footer">taskativeapp.com</text>
+
+  <!-- Task cards on the right -->
+  <g transform="translate(680, 130)" filter="url(#shadow)">
+    <rect x="0" y="0" width="520" height="540" rx="20" fill="#FFFFFF" stroke="#E4E7E5"/>
+
+    <!-- Header -->
+    <text x="30" y="50" class="label">Today</text>
+    <rect x="30" y="64" width="460" height="1" fill="#E4E7E5"/>
+
+    <!-- Task 1 -->
+    <g transform="translate(30, 90)">
+      <rect x="0" y="0" width="460" height="92" rx="14" fill="#FAFBFA" stroke="#E4E7E5"/>
+      <rect x="0" y="0" width="4" height="92" fill="#E8A33D"/>
+      <circle cx="24" cy="22" r="8" fill="none" stroke="#C0CEC0" stroke-width="2"/>
+      <text x="44" y="27" class="task-title">Review checkout flow and test payment flow</text>
+      <text x="44" y="48" class="task-desc">Captured from company.com — 2 hours ago</text>
+      <!-- chips -->
+      <rect x="44" y="58" width="70" height="22" rx="6" fill="#FFF4DC"/>
+      <text x="54" y="73" class="chip" fill="#A3650A">Fri, Apr 15</text>
+      <rect x="122" y="58" width="44" height="22" rx="6" fill="#E3F2FD"/>
+      <text x="132" y="73" class="chip" fill="#1565C0">web</text>
+    </g>
+
+    <!-- Task 2 -->
+    <g transform="translate(30, 200)">
+      <rect x="0" y="0" width="460" height="92" rx="14" fill="#FAFBFA" stroke="#E4E7E5"/>
+      <rect x="0" y="0" width="4" height="92" fill="#5EEEA0"/>
+      <circle cx="24" cy="22" r="8" fill="#2E8B34"/>
+      <path d="M 19 22 L 23 26 L 30 18" stroke="white" stroke-width="2.5" fill="none"/>
+      <text x="44" y="27" class="task-title" style="text-decoration: line-through;" fill="#9CA3AF">Confirm landing page copy</text>
+      <text x="44" y="48" class="task-desc">Done · 30 min ago</text>
+      <rect x="44" y="58" width="60" height="22" rx="6" fill="#E6F9F0"/>
+      <text x="54" y="73" class="chip" fill="#1A9E5C">Done</text>
+    </g>
+
+    <!-- Task 3 -->
+    <g transform="translate(30, 310)">
+      <rect x="0" y="0" width="460" height="92" rx="14" fill="#FAFBFA" stroke="#E4E7E5"/>
+      <rect x="0" y="0" width="4" height="92" fill="#2E8B34"/>
+      <circle cx="24" cy="22" r="8" fill="none" stroke="#C0CEC0" stroke-width="2"/>
+      <text x="44" y="27" class="task-title">Update privacy policy for EU compliance</text>
+      <text x="44" y="48" class="task-desc">3 subtasks · 1 completed</text>
+      <!-- progress bar -->
+      <rect x="44" y="62" width="200" height="4" rx="2" fill="#E4E7E5"/>
+      <rect x="44" y="62" width="65" height="4" rx="2" fill="#2E8B34"/>
+      <text x="250" y="70" font-size="10" fill="#9CA3AF">1/3</text>
+    </g>
+
+    <!-- Task 4 -->
+    <g transform="translate(30, 420)">
+      <rect x="0" y="0" width="460" height="92" rx="14" fill="#FAFBFA" stroke="#E4E7E5"/>
+      <rect x="0" y="0" width="4" height="92" fill="#FF6B7A"/>
+      <circle cx="24" cy="22" r="8" fill="none" stroke="#C0CEC0" stroke-width="2"/>
+      <text x="44" y="27" class="task-title">Set up analytics dashboard</text>
+      <text x="44" y="48" class="task-desc">Due yesterday</text>
+      <rect x="44" y="58" width="80" height="22" rx="6" fill="#FEE8EC"/>
+      <text x="54" y="73" class="chip" fill="#D9344A">Overdue</text>
+    </g>
+  </g>
+</svg>

@@ -93,29 +93,56 @@ export default function TimelinePage() {
     return { left, width };
   }
 
-  async function moveTaskByDays(taskId: string, daysDelta: number) {
+  type DragMode = "move" | "resize-start" | "resize-end";
+
+  async function shiftTask(taskId: string, daysDelta: number, mode: DragMode) {
     if (daysDelta === 0) return;
     const task = tasks.find((t) => t.id === taskId);
-    if (!task || !task.dueDate) return;
+    if (!task) return;
 
-    const newDue = new Date(task.dueDate);
-    newDue.setDate(newDue.getDate() + daysDelta);
-    let newStart: Date | null = null;
-    if (task.startDate) {
-      newStart = new Date(task.startDate);
-      newStart.setDate(newStart.getDate() + daysDelta);
+    const curStart = task.startDate ? new Date(task.startDate) : task.dueDate ? new Date(task.dueDate) : null;
+    const curDue = task.dueDate ? new Date(task.dueDate) : curStart;
+    if (!curStart || !curDue) return;
+
+    let newStart = curStart;
+    let newDue = curDue;
+    const body: Record<string, any> = {};
+
+    if (mode === "move") {
+      newStart = new Date(curStart); newStart.setDate(newStart.getDate() + daysDelta);
+      newDue = new Date(curDue); newDue.setDate(newDue.getDate() + daysDelta);
+      body.startDate = newStart.toISOString();
+      body.dueDate = newDue.toISOString();
+    } else if (mode === "resize-start") {
+      newStart = new Date(curStart); newStart.setDate(newStart.getDate() + daysDelta);
+      // Don't let start pass due
+      if (newStart.getTime() >= curDue.getTime()) {
+        newStart = new Date(curDue.getTime() - 60 * 60 * 1000); // 1h before due
+      }
+      body.startDate = newStart.toISOString();
+    } else if (mode === "resize-end") {
+      newDue = new Date(curDue); newDue.setDate(newDue.getDate() + daysDelta);
+      if (newDue.getTime() <= curStart.getTime()) {
+        newDue = new Date(curStart.getTime() + 60 * 60 * 1000); // 1h after start
+      }
+      body.dueDate = newDue.toISOString();
     }
 
-    const newDueISO = newDue.toISOString();
-    const newStartISO = newStart?.toISOString() || null;
-
-    setTasks((prev) => prev.map((t) => t.id === taskId ? { ...t, dueDate: newDueISO, startDate: newStartISO || t.startDate } : t));
+    // Optimistic UI
+    setTasks((prev) => prev.map((t) => {
+      if (t.id !== taskId) return t;
+      return {
+        ...t,
+        startDate: body.startDate !== undefined ? body.startDate : t.startDate,
+        dueDate: body.dueDate !== undefined ? body.dueDate : t.dueDate,
+      };
+    }));
 
     try {
       await fetch(`/api/tasks/${taskId}`, {
         method: "PATCH",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ dueDate: newDueISO }),
+        body: JSON.stringify(body),
       });
     } catch {
       setTasks((prev) => prev.map((t) => (t.id === taskId ? task : t)));
@@ -261,40 +288,78 @@ export default function TimelinePage() {
                       </button>
                       {/* Timeline bar area */}
                       <div
-                        className="flex-1 relative min-h-[36px] py-2.5"
+                        className="flex-1 relative min-h-[40px] py-2.5"
                         onDragOver={(e) => e.preventDefault()}
                         onDrop={(e) => {
                           e.preventDefault();
                           const taskId = e.dataTransfer.getData("text/taskId");
                           const startX = parseFloat(e.dataTransfer.getData("text/startX") || "0");
+                          const mode = (e.dataTransfer.getData("text/mode") || "move") as "move" | "resize-start" | "resize-end";
                           if (!taskId || !startX) return;
                           const rect = e.currentTarget.getBoundingClientRect();
-                          // Delta in pixels between grab point and drop point
                           const deltaPixels = e.clientX - startX;
-                          // Convert to days based on this row's width
                           const pixelsPerDay = rect.width / rangeDays;
                           const daysDelta = Math.round(deltaPixels / pixelsPerDay);
-                          if (daysDelta !== 0) moveTaskByDays(taskId, daysDelta);
+                          if (daysDelta !== 0) shiftTask(taskId, daysDelta, mode);
                         }}
                       >
+                        {/* Task bar with resize handles */}
                         <div
-                          draggable
-                          onDragStart={(e) => {
-                            e.dataTransfer.setData("text/taskId", task.id);
-                            e.dataTransfer.setData("text/startX", String(e.clientX));
-                            e.dataTransfer.effectAllowed = "move";
-                            setDraggingTaskId(task.id);
-                          }}
-                          onDragEnd={() => setDraggingTaskId(null)}
-                          className={`absolute top-1/2 -translate-y-1/2 h-5 rounded-md ${barColor} opacity-90 hover:opacity-100 transition-opacity px-2 flex items-center overflow-hidden cursor-grab active:cursor-grabbing ${
+                          className={`absolute top-1/2 -translate-y-1/2 h-6 rounded-md ${barColor} shadow-sm flex items-center overflow-visible group ${
                             draggingTaskId === task.id ? "ring-2 ring-primary opacity-60" : ""
                           }`}
-                          style={{ left: `${left}%`, width: `${width}%`, minWidth: "20px" }}
-                          title={`${task.title} — drag to reschedule`}
+                          style={{ left: `${left}%`, width: `${width}%`, minWidth: "30px" }}
+                          title={`${task.title} — drag middle to move, edges to resize`}
                         >
-                          <span className="text-[10px] font-medium text-on-primary truncate pointer-events-none">
-                            {task.title}
-                          </span>
+                          {/* LEFT resize handle */}
+                          <div
+                            draggable
+                            onDragStart={(e) => {
+                              e.stopPropagation();
+                              e.dataTransfer.setData("text/taskId", task.id);
+                              e.dataTransfer.setData("text/startX", String(e.clientX));
+                              e.dataTransfer.setData("text/mode", "resize-start");
+                              e.dataTransfer.effectAllowed = "move";
+                              setDraggingTaskId(task.id);
+                            }}
+                            onDragEnd={() => setDraggingTaskId(null)}
+                            className="absolute left-0 top-0 bottom-0 w-2 cursor-ew-resize bg-black/20 hover:bg-black/40 rounded-l-md"
+                            title="Drag to change start date"
+                          />
+
+                          {/* MIDDLE — move whole task */}
+                          <div
+                            draggable
+                            onDragStart={(e) => {
+                              e.dataTransfer.setData("text/taskId", task.id);
+                              e.dataTransfer.setData("text/startX", String(e.clientX));
+                              e.dataTransfer.setData("text/mode", "move");
+                              e.dataTransfer.effectAllowed = "move";
+                              setDraggingTaskId(task.id);
+                            }}
+                            onDragEnd={() => setDraggingTaskId(null)}
+                            className="absolute left-2 right-2 top-0 bottom-0 cursor-grab active:cursor-grabbing px-2 flex items-center overflow-hidden"
+                          >
+                            <span className="text-[10px] font-medium text-on-primary truncate pointer-events-none">
+                              {task.title}
+                            </span>
+                          </div>
+
+                          {/* RIGHT resize handle */}
+                          <div
+                            draggable
+                            onDragStart={(e) => {
+                              e.stopPropagation();
+                              e.dataTransfer.setData("text/taskId", task.id);
+                              e.dataTransfer.setData("text/startX", String(e.clientX));
+                              e.dataTransfer.setData("text/mode", "resize-end");
+                              e.dataTransfer.effectAllowed = "move";
+                              setDraggingTaskId(task.id);
+                            }}
+                            onDragEnd={() => setDraggingTaskId(null)}
+                            className="absolute right-0 top-0 bottom-0 w-2 cursor-ew-resize bg-black/20 hover:bg-black/40 rounded-r-md"
+                            title="Drag to change due date"
+                          />
                         </div>
                       </div>
                     </div>
@@ -306,10 +371,16 @@ export default function TimelinePage() {
         )}
 
         {/* Legend */}
-        <div className="flex items-center gap-4 mt-4 text-xs text-text-dim">
-          <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-primary" /> Pending</span>
-          <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-success" /> Done</span>
-          <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-danger" /> Overdue</span>
+        <div className="flex items-center justify-between mt-4 text-xs text-text-dim">
+          <div className="flex items-center gap-4">
+            <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-primary" /> Pending</span>
+            <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-success" /> Done</span>
+            <span className="flex items-center gap-1.5"><span className="w-3 h-3 rounded bg-danger" /> Overdue</span>
+          </div>
+          <div className="hidden sm:flex items-center gap-3 text-text-dim">
+            <span>💡</span>
+            <span><strong className="text-text-muted">Drag middle</strong> to move · <strong className="text-text-muted">Drag edges</strong> to resize</span>
+          </div>
         </div>
 
         {/* Task detail */}

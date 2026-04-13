@@ -235,6 +235,10 @@ export const taskRepo: TaskRepository = {
         update.dueTimestamp = null;
       }
     }
+    if ((data as any).startDate !== undefined) {
+      const sd = (data as any).startDate;
+      update.startDate = sd ? Timestamp.fromDate(new Date(sd)) : null;
+    }
 
     // Try personal tasks first, then search in groups the user is a member of
     const personalRef = db.collection("usertasks").doc(userId).collection("tasks").doc(taskId);

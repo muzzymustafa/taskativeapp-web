@@ -1,0 +1,33 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="440" height="280" viewBox="0 0 440 280">
+  <defs>
+    <linearGradient id="bg" x1="0%" y1="0%" x2="100%" y2="100%">
+      <stop offset="0%" stop-color="#2E8B34"/>
+      <stop offset="100%" stop-color="#1C6C22"/>
+    </linearGradient>
+  </defs>
+  <style>
+    text { font-family: Arial, sans-serif; }
+  </style>
+
+  <rect width="440" height="280" fill="url(#bg)"/>
+
+  <!-- Decorative circles -->
+  <circle cx="400" cy="60" r="80" fill="white" fill-opacity="0.08"/>
+  <circle cx="50" cy="240" r="60" fill="white" fill-opacity="0.05"/>
+
+  <!-- Logo -->
+  <g transform="translate(32, 32)">
+    <rect x="0" y="0" width="44" height="44" rx="10" fill="white"/>
+    <text x="22" y="32" font-size="26" font-weight="900" fill="#2E8B34" text-anchor="middle">T</text>
+  </g>
+
+  <!-- Title -->
+  <text x="32" y="150" font-size="36" font-weight="900" fill="white" letter-spacing="-0.8">Taskative</text>
+
+  <!-- Tagline -->
+  <text x="32" y="190" font-size="18" font-weight="600" fill="white" fill-opacity="0.9">Quick Task</text>
+
+  <!-- Description -->
+  <text x="32" y="230" font-size="13" fill="white" fill-opacity="0.8">Select text → right-click →</text>
+  <text x="32" y="250" font-size="13" fill="white" fill-opacity="0.8">add to your task list instantly</text>
+</svg>

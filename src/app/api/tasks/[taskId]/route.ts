@@ -2,7 +2,7 @@ import { NextRequest, NextResponse } from "next/server";
 import { getAuthUserId, unauthorized } from "@/lib/api-auth";
 import { taskRepo } from "@/lib/adapters/firebase";
 
-const ALLOWED_UPDATE_FIELDS = ["title", "description", "status", "dueDate"];
+const ALLOWED_UPDATE_FIELDS = ["title", "description", "status", "dueDate", "startDate"];
 const ALLOWED_STATUSES = ["pending", "done", "cancelled"];
 
 // GET /api/tasks/:taskId

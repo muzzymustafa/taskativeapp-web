@@ -65,6 +65,7 @@ export interface UpdateTaskInput {
   description?: string;
   status?: Task["status"];
   dueDate?: string | null;
+  startDate?: string | null;
 }
 
 export interface TaskRepository {
