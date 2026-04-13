@@ -266,12 +266,14 @@ export default function TimelinePage() {
                         onDrop={(e) => {
                           e.preventDefault();
                           const taskId = e.dataTransfer.getData("text/taskId");
-                          const startLeft = parseFloat(e.dataTransfer.getData("text/startLeft") || "0");
-                          if (!taskId) return;
+                          const startX = parseFloat(e.dataTransfer.getData("text/startX") || "0");
+                          if (!taskId || !startX) return;
                           const rect = e.currentTarget.getBoundingClientRect();
-                          const dropPercent = ((e.clientX - rect.left) / rect.width) * 100;
-                          const dayWidth = 100 / rangeDays;
-                          const daysDelta = Math.round((dropPercent - startLeft) / dayWidth);
+                          // Delta in pixels between grab point and drop point
+                          const deltaPixels = e.clientX - startX;
+                          // Convert to days based on this row's width
+                          const pixelsPerDay = rect.width / rangeDays;
+                          const daysDelta = Math.round(deltaPixels / pixelsPerDay);
                           if (daysDelta !== 0) moveTaskByDays(taskId, daysDelta);
                         }}
                       >
@@ -279,7 +281,7 @@ export default function TimelinePage() {
                           draggable
                           onDragStart={(e) => {
                             e.dataTransfer.setData("text/taskId", task.id);
-                            e.dataTransfer.setData("text/startLeft", String(left));
+                            e.dataTransfer.setData("text/startX", String(e.clientX));
                             e.dataTransfer.effectAllowed = "move";
                             setDraggingTaskId(task.id);
                           }}

@@ -6,6 +6,7 @@ import { useRouter } from "next/navigation";
 import { Logo } from "@/components/marketing/Logo";
 import { UserMenu } from "@/components/app/UserMenu";
 import { AppNav } from "@/components/app/AppNav";
+import { TaskDetail } from "@/components/app/TaskDetail";
 import type { Task } from "@/lib/adapters/types";
 
 export default function CalendarPage() {
@@ -16,6 +17,7 @@ export default function CalendarPage() {
   const [currentDate, setCurrentDate] = useState(new Date());
   const [selectedDay, setSelectedDay] = useState<Date | null>(null);
   const [dragOverDay, setDragOverDay] = useState<string | null>(null);
+  const [selectedTask, setSelectedTask] = useState<Task | null>(null);
 
   useEffect(() => {
     if (status === "unauthenticated") router.push("/login");
@@ -87,11 +89,17 @@ export default function CalendarPage() {
   while (cells.length % 7 !== 0) cells.push(null);
 
   function tasksForDay(day: Date) {
-    return tasks.filter((t) => {
-      if (t.status === "cancelled" || !t.dueDate) return false;
-      const d = new Date(t.dueDate);
-      return d.getFullYear() === day.getFullYear() && d.getMonth() === day.getMonth() && d.getDate() === day.getDate();
-    });
+    return tasks
+      .filter((t) => {
+        if (t.status === "cancelled" || !t.dueDate) return false;
+        const d = new Date(t.dueDate);
+        return d.getFullYear() === day.getFullYear() && d.getMonth() === day.getMonth() && d.getDate() === day.getDate();
+      })
+      // Sort: pending first, then done
+      .sort((a, b) => {
+        if (a.status === b.status) return 0;
+        return a.status === "done" ? 1 : -1;
+      });
   }
 
   const today = new Date();
@@ -178,7 +186,7 @@ export default function CalendarPage() {
                       const taskId = e.dataTransfer.getData("text/taskId");
                       if (taskId) handleDrop(taskId, day);
                     }}
-                    className={`min-h-[90px] border-b border-r border-outline/30 p-2 text-left cursor-pointer transition-all ${
+                    className={`min-h-[110px] border-b border-r border-outline/30 p-2 text-left cursor-pointer transition-all ${
                       isDragOver
                         ? "bg-primary/15 ring-2 ring-primary ring-inset"
                         : isSelected
@@ -199,7 +207,7 @@ export default function CalendarPage() {
                       )}
                     </div>
                     <div className="space-y-0.5">
-                      {dayTasks.slice(0, 2).map((t) => (
+                      {dayTasks.slice(0, 3).map((t) => (
                         <div
                           key={t.id}
                           draggable
@@ -207,6 +215,10 @@ export default function CalendarPage() {
                             e.stopPropagation();
                             e.dataTransfer.setData("text/taskId", t.id);
                             e.dataTransfer.effectAllowed = "move";
+                          }}
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            setSelectedTask(t);
                           }}
                           className={`text-[10px] px-1.5 py-0.5 rounded truncate cursor-grab active:cursor-grabbing ${
                             t.status === "done"
@@ -220,8 +232,8 @@ export default function CalendarPage() {
                           {t.title}
                         </div>
                       ))}
-                      {dayTasks.length > 2 && (
-                        <div className="text-[10px] text-text-dim">+{dayTasks.length - 2} more</div>
+                      {dayTasks.length > 3 && (
+                        <div className="text-[10px] text-text-dim">+{dayTasks.length - 3} more</div>
                       )}
                     </div>
                   </div>
@@ -240,7 +252,17 @@ export default function CalendarPage() {
             </h2>
             <div className="space-y-2">
               {selectedTasks.map((t) => (
-                <div key={t.id} className="flex items-center gap-3 p-3 rounded-xl bg-bg border border-outline/50">
+                <button
+                  key={t.id}
+                  type="button"
+                  onClick={() => setSelectedTask(t)}
+                  draggable
+                  onDragStart={(e) => {
+                    e.dataTransfer.setData("text/taskId", t.id);
+                    e.dataTransfer.effectAllowed = "move";
+                  }}
+                  className="w-full text-left flex items-center gap-3 p-3 rounded-xl bg-bg border border-outline/50 hover:border-outline-strong cursor-grab active:cursor-grabbing transition-colors"
+                >
                   <div className={`w-4 h-4 rounded-full border-2 flex items-center justify-center shrink-0 ${
                     t.status === "done" ? "bg-primary border-primary" : "border-outline-strong"
                   }`}>
@@ -258,10 +280,22 @@ export default function CalendarPage() {
                       {new Date(t.dueDate).toLocaleTimeString("en", { hour: "2-digit", minute: "2-digit" })}
                     </span>
                   )}
-                </div>
+                </button>
               ))}
             </div>
           </div>
+        )}
+
+        {/* Task detail modal */}
+        {selectedTask && (
+          <TaskDetail
+            task={selectedTask}
+            onClose={() => setSelectedTask(null)}
+            onUpdate={(updated) => {
+              setTasks((prev) => prev.map((t) => (t.id === updated.id ? updated : t)));
+              setSelectedTask(updated);
+            }}
+          />
         )}
       </main>
     </div>
