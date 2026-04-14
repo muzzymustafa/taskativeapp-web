@@ -206,6 +206,7 @@ export const taskRepo: TaskRepository = {
       description: data.description || "",
       status: "pending" as const,
       dueDate: data.dueDate || null,
+      startDate: data.startDate || (data.dueDate ? data.dueDate : new Date().toISOString()),
       createdAt: new Date().toISOString(),
       createdByUserId: userId,
       groupId: null,
