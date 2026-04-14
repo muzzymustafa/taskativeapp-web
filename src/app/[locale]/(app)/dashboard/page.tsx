@@ -24,17 +24,20 @@ export default function DashboardPage() {
   }, [status, router]);
 
   useEffect(() => {
-    if (status === "authenticated") {
-      fetch("/api/user").then((r) => r.ok ? r.json() : null).then(setProfile);
-      fetch("/api/tasks").then((r) => r.ok ? r.json() : []).then((tasks: Task[]) => {
-        const now = new Date();
-        setStats({
-          pending: tasks.filter((t) => t.status === "pending").length,
-          done: tasks.filter((t) => t.status === "done").length,
-          overdue: tasks.filter((t) => t.status === "pending" && t.dueDate && new Date(t.dueDate) < now).length,
-        });
+    if (status !== "authenticated") return;
+    // Parallel fetch — avoid double roundtrip
+    Promise.all([
+      fetch("/api/user").then((r) => (r.ok ? r.json() : null)),
+      fetch("/api/tasks").then((r) => (r.ok ? r.json() : [])),
+    ]).then(([userProfile, tasks]: [UserProfile | null, Task[]]) => {
+      if (userProfile) setProfile(userProfile);
+      const now = new Date();
+      setStats({
+        pending: tasks.filter((t) => t.status === "pending").length,
+        done: tasks.filter((t) => t.status === "done").length,
+        overdue: tasks.filter((t) => t.status === "pending" && t.dueDate && new Date(t.dueDate) < now).length,
       });
-    }
+    });
   }, [status, refreshKey]);
 
   if (status === "loading") {

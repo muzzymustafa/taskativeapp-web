@@ -101,6 +101,20 @@ export const taskRepo: TaskRepository = {
   },
 
   async createTask(userId, data, userEmail?: string) {
+    // Quota check — prevent free users from exceeding monthly task limit
+    const userDoc = await db.collection("users").doc(userId).get();
+    const userData = userDoc.data() || {};
+    const used = userData.usedTasksThisMonth || 0;
+    const limit = userData.taskLimitPerMonth || 50;
+    // 999999 is the "unlimited" sentinel (Pro/lifetime users)
+    if (limit !== 999999 && used >= limit) {
+      const err = new Error("QUOTA_EXCEEDED");
+      (err as any).code = "QUOTA_EXCEEDED";
+      (err as any).limit = limit;
+      (err as any).used = used;
+      throw err;
+    }
+
     // Use mobile app field names for full compatibility
     const nowMs = Date.now();
     const taskData: Record<string, any> = {
