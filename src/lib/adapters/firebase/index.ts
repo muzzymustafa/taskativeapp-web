@@ -101,19 +101,49 @@ export const taskRepo: TaskRepository = {
   },
 
   async createTask(userId, data, userEmail?: string) {
-    // Quota check — prevent free users from exceeding monthly task limit
-    const userDoc = await db.collection("users").doc(userId).get();
-    const userData = userDoc.data() || {};
-    const used = userData.usedTasksThisMonth || 0;
-    const limit = userData.taskLimitPerMonth || 50;
-    // 999999 is the "unlimited" sentinel (Pro/lifetime users)
-    if (limit !== 999999 && used >= limit) {
-      const err = new Error("QUOTA_EXCEEDED");
-      (err as any).code = "QUOTA_EXCEEDED";
-      (err as any).limit = limit;
-      (err as any).used = used;
-      throw err;
-    }
+    // Atomic quota + rate limit check via Firestore transaction.
+    // Works across serverless instances (unlike in-memory counters).
+    const userRef = db.collection("users").doc(userId);
+    const RATE_WINDOW_MS = 60 * 1000;
+    const RATE_MAX = 60; // max 60 tasks/minute
+
+    await db.runTransaction(async (tx) => {
+      const userSnap = await tx.get(userRef);
+      const userData = userSnap.data() || {};
+      const used = userData.usedTasksThisMonth || 0;
+      const limit = userData.taskLimitPerMonth || 50;
+
+      // Monthly quota
+      if (limit !== 999999 && used >= limit) {
+        const err = new Error("QUOTA_EXCEEDED");
+        (err as any).code = "QUOTA_EXCEEDED";
+        (err as any).limit = limit;
+        (err as any).used = used;
+        throw err;
+      }
+
+      // Sliding window rate limit
+      const nowMs = Date.now();
+      const rlStart = userData.rateLimitWindowStart || 0;
+      const rlCount = userData.rateLimitCount || 0;
+
+      if (nowMs - rlStart > RATE_WINDOW_MS) {
+        // New window
+        tx.update(userRef, {
+          rateLimitWindowStart: nowMs,
+          rateLimitCount: 1,
+        });
+      } else {
+        // Within window
+        if (rlCount >= RATE_MAX) {
+          const err = new Error("RATE_LIMITED");
+          (err as any).code = "RATE_LIMITED";
+          (err as any).retryAfterSec = Math.ceil((RATE_WINDOW_MS - (nowMs - rlStart)) / 1000);
+          throw err;
+        }
+        tx.update(userRef, { rateLimitCount: FieldValue.increment(1) });
+      }
+    });
 
     // Use mobile app field names for full compatibility
     const nowMs = Date.now();

@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { getAuthUserId, getAuthUser, unauthorized } from "@/lib/api-auth";
 import { taskRepo } from "@/lib/adapters/firebase";
-import { checkRateLimit } from "@/lib/rate-limit";
 
 // GET /api/tasks — list user's tasks
 export async function GET() {
@@ -21,15 +20,6 @@ export async function GET() {
 export async function POST(req: NextRequest) {
   const user = await getAuthUser();
   if (!user) return unauthorized();
-
-  // Rate limit: 60 requests per minute per user
-  const rl = checkRateLimit(`tasks:${user.uid}`);
-  if (!rl.allowed) {
-    return NextResponse.json(
-      { error: "Too many requests", retryAfterSec: rl.retryAfterSec },
-      { status: 429, headers: { "Retry-After": String(rl.retryAfterSec) } }
-    );
-  }
 
   try {
     const body = await req.json();
@@ -80,6 +70,12 @@ export async function POST(req: NextRequest) {
         return NextResponse.json(
           { error: "Monthly task limit reached", used: err.used, limit: err.limit },
           { status: 429 }
+        );
+      }
+      if (err.code === "RATE_LIMITED") {
+        return NextResponse.json(
+          { error: "Too many requests", retryAfterSec: err.retryAfterSec },
+          { status: 429, headers: { "Retry-After": String(err.retryAfterSec) } }
         );
       }
       throw err;

@@ -1,7 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { auth } from "@/lib/firebase/admin";
 import { taskRepo } from "@/lib/adapters/firebase";
-import { checkRateLimit } from "@/lib/rate-limit";
 
 // NOTE: We intentionally do NOT set Access-Control-Allow-Origin here.
 // Chrome/Firefox extensions with host_permissions declared in manifest.json
@@ -31,15 +30,6 @@ export async function POST(req: NextRequest) {
       return NextResponse.json({ error: "Invalid token" }, { status: 401 });
     }
 
-    // Rate limit: 60 requests per minute per user
-    const rl = checkRateLimit(`ext:${decoded.uid}`);
-    if (!rl.allowed) {
-      return NextResponse.json(
-        { error: "Too many requests", retryAfterSec: rl.retryAfterSec },
-        { status: 429, headers: { "Retry-After": String(rl.retryAfterSec) } }
-      );
-    }
-
     const body = await req.json();
     const { title, description } = body;
 
@@ -67,6 +57,12 @@ export async function POST(req: NextRequest) {
         return NextResponse.json(
           { error: "Monthly task limit reached", used: err.used, limit: err.limit },
           { status: 429 }
+        );
+      }
+      if (err.code === "RATE_LIMITED") {
+        return NextResponse.json(
+          { error: "Too many requests", retryAfterSec: err.retryAfterSec },
+          { status: 429, headers: { "Retry-After": String(err.retryAfterSec) } }
         );
       }
       throw err;
