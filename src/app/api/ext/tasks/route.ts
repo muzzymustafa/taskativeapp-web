@@ -59,10 +59,22 @@ export async function POST(req: NextRequest) {
           { status: 429 }
         );
       }
+      if (err.code === "DAILY_LIMIT") {
+        return NextResponse.json(
+          { error: "Daily task limit reached", limit: err.limit, retryAfterSec: err.retryAfterSec },
+          { status: 429, headers: { "Retry-After": String(err.retryAfterSec) } }
+        );
+      }
       if (err.code === "RATE_LIMITED") {
         return NextResponse.json(
-          { error: "Too many requests", retryAfterSec: err.retryAfterSec },
+          { error: "Too many requests", retryAfterSec: err.retryAfterSec, violationsRemaining: err.violationsRemaining },
           { status: 429, headers: { "Retry-After": String(err.retryAfterSec) } }
+        );
+      }
+      if (err.code === "BANNED") {
+        return NextResponse.json(
+          { error: err.reason || "Account temporarily suspended", retryAfterSec: err.retryAfterSec },
+          { status: 403, headers: { "Retry-After": String(err.retryAfterSec) } }
         );
       }
       throw err;

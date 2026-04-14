@@ -101,47 +101,107 @@ export const taskRepo: TaskRepository = {
   },
 
   async createTask(userId, data, userEmail?: string) {
-    // Atomic quota + rate limit check via Firestore transaction.
+    // Atomic quota + rate limit + soft ban check via Firestore transaction.
     // Works across serverless instances (unlike in-memory counters).
     const userRef = db.collection("users").doc(userId);
+
+    // Hard caps — applied on top of user's plan limits to prevent abuse
     const RATE_WINDOW_MS = 60 * 1000;
-    const RATE_MAX = 60; // max 60 tasks/minute
+    const RATE_MAX = 60;           // max 60 tasks/min
+    const DAY_MS = 24 * 60 * 60 * 1000;
+    const DAILY_MAX = 200;          // max 200 tasks/day (all plans)
+    const MONTHLY_MAX_PAID = 2000;  // hard cap for paid users
+    const VIOLATION_THRESHOLD = 3;  // 3 rate-limit hits → ban
+    const BAN_MS = 24 * 60 * 60 * 1000; // 24 hours
+
+    function makeErr(code: string, extras: Record<string, any> = {}) {
+      const e = new Error(code);
+      (e as any).code = code;
+      Object.assign(e as any, extras);
+      return e;
+    }
 
     await db.runTransaction(async (tx) => {
       const userSnap = await tx.get(userRef);
       const userData = userSnap.data() || {};
-      const used = userData.usedTasksThisMonth || 0;
-      const limit = userData.taskLimitPerMonth || 50;
+      const nowMs = Date.now();
 
-      // Monthly quota
-      if (limit !== 999999 && used >= limit) {
-        const err = new Error("QUOTA_EXCEEDED");
-        (err as any).code = "QUOTA_EXCEEDED";
-        (err as any).limit = limit;
-        (err as any).used = used;
-        throw err;
+      // 1. Soft ban — if user is currently banned, reject immediately
+      const bannedUntil = userData.bannedUntil || 0;
+      if (bannedUntil > nowMs) {
+        throw makeErr("BANNED", {
+          retryAfterSec: Math.ceil((bannedUntil - nowMs) / 1000),
+        });
       }
 
-      // Sliding window rate limit
-      const nowMs = Date.now();
+      // 2. Monthly quota — apply plan limit OR hard cap for paid users
+      const monthlyLimitRaw = userData.taskLimitPerMonth || 50;
+      const membershipLevel = (userData.membershipLevel || "free").toLowerCase();
+      const isPaid = membershipLevel !== "free";
+      // Free users keep their plan limit (50). Paid users are hard-capped at 2000
+      // even if their stored limit says 999999/Infinity.
+      const monthlyLimit = isPaid
+        ? Math.min(monthlyLimitRaw === 999999 ? MONTHLY_MAX_PAID : monthlyLimitRaw, MONTHLY_MAX_PAID)
+        : monthlyLimitRaw;
+      const used = userData.usedTasksThisMonth || 0;
+      if (used >= monthlyLimit) {
+        throw makeErr("QUOTA_EXCEEDED", { limit: monthlyLimit, used });
+      }
+
+      // 3. Daily cap (resets every 24h)
+      const dayWindowStart = userData.dayWindowStart || 0;
+      let usedToday = userData.usedTasksToday || 0;
+      if (nowMs - dayWindowStart > DAY_MS) {
+        // New day window
+        usedToday = 0;
+      }
+      if (usedToday >= DAILY_MAX) {
+        throw makeErr("DAILY_LIMIT", {
+          limit: DAILY_MAX,
+          retryAfterSec: Math.ceil((dayWindowStart + DAY_MS - nowMs) / 1000),
+        });
+      }
+
+      // 4. Rate limit (60/min) with violation tracking
       const rlStart = userData.rateLimitWindowStart || 0;
       const rlCount = userData.rateLimitCount || 0;
+      let violations = userData.rateLimitViolations || 0;
 
       if (nowMs - rlStart > RATE_WINDOW_MS) {
-        // New window
+        // New rate window — reset count, keep violations
         tx.update(userRef, {
           rateLimitWindowStart: nowMs,
           rateLimitCount: 1,
+          // Update daily counter
+          usedTasksToday: nowMs - dayWindowStart > DAY_MS ? 1 : FieldValue.increment(1),
+          dayWindowStart: nowMs - dayWindowStart > DAY_MS ? nowMs : dayWindowStart,
+        });
+      } else if (rlCount >= RATE_MAX) {
+        // Rate limited — increment violation count and possibly ban
+        violations++;
+        if (violations >= VIOLATION_THRESHOLD) {
+          // Soft ban for 24h + reset violations
+          tx.update(userRef, {
+            bannedUntil: nowMs + BAN_MS,
+            rateLimitViolations: 0,
+          });
+          throw makeErr("BANNED", {
+            retryAfterSec: Math.ceil(BAN_MS / 1000),
+            reason: "Too many rate-limit violations — account temporarily suspended",
+          });
+        }
+        tx.update(userRef, { rateLimitViolations: violations });
+        throw makeErr("RATE_LIMITED", {
+          retryAfterSec: Math.ceil((RATE_WINDOW_MS - (nowMs - rlStart)) / 1000),
+          violationsRemaining: VIOLATION_THRESHOLD - violations,
         });
       } else {
-        // Within window
-        if (rlCount >= RATE_MAX) {
-          const err = new Error("RATE_LIMITED");
-          (err as any).code = "RATE_LIMITED";
-          (err as any).retryAfterSec = Math.ceil((RATE_WINDOW_MS - (nowMs - rlStart)) / 1000);
-          throw err;
-        }
-        tx.update(userRef, { rateLimitCount: FieldValue.increment(1) });
+        // Within rate window — increment counters
+        tx.update(userRef, {
+          rateLimitCount: FieldValue.increment(1),
+          usedTasksToday: nowMs - dayWindowStart > DAY_MS ? 1 : FieldValue.increment(1),
+          dayWindowStart: nowMs - dayWindowStart > DAY_MS ? nowMs : dayWindowStart,
+        });
       }
     });
 
