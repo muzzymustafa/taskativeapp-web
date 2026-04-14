@@ -90,6 +90,12 @@ export async function POST(req: NextRequest) {
           { status: 403, headers: { "Retry-After": String(err.retryAfterSec) } }
         );
       }
+      if (err.code === "GLOBAL_LIMITED") {
+        return NextResponse.json(
+          { error: "System is temporarily overloaded. Please try again shortly.", retryAfterSec: err.retryAfterSec },
+          { status: 503, headers: { "Retry-After": String(err.retryAfterSec) } }
+        );
+      }
       throw err;
     }
   } catch (err: any) {

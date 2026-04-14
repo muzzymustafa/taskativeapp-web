@@ -44,6 +44,87 @@ function mapTask(d: any, userId: string): Task {
   };
 }
 
+// ── Rate limit / quota helpers ──
+
+function makeErr(code: string, extras: Record<string, any> = {}) {
+  const e = new Error(code);
+  (e as any).code = code;
+  Object.assign(e as any, extras);
+  return e;
+}
+
+// Shared constants
+const RATE_WINDOW_MS = 60 * 1000;
+const RATE_MAX = 60;            // max 60 writes/min (create + update combined)
+const DAY_MS = 24 * 60 * 60 * 1000;
+const DAILY_MAX = 200;           // max 200 creates/day (only applies to create)
+const MONTHLY_MAX_PAID = 2000;   // hard cap for paid users
+const VIOLATION_THRESHOLD = 3;   // 3 rate-limit hits → ban
+const BAN_MS = 24 * 60 * 60 * 1000;
+const GLOBAL_MAX_PER_MIN = 1000; // system-wide soft cap
+
+// Checks ban + rate limit (no quota). Used by both create and update.
+// Throws BANNED / RATE_LIMITED / GLOBAL_LIMITED error codes.
+async function enforceRateLimit(
+  tx: FirebaseFirestore.Transaction,
+  userRef: FirebaseFirestore.DocumentReference,
+  userData: any,
+  nowMs: number
+) {
+  // Global rate limit — shared counter across all users
+  const globalRef = db.collection("meta").doc("globalStats");
+  const globalSnap = await tx.get(globalRef);
+  const globalData = globalSnap.data() || {};
+  const gStart = globalData.windowStart || 0;
+  const gCount = globalData.count || 0;
+
+  if (nowMs - gStart > RATE_WINDOW_MS) {
+    tx.set(globalRef, { windowStart: nowMs, count: 1 }, { merge: true });
+  } else if (gCount >= GLOBAL_MAX_PER_MIN) {
+    throw makeErr("GLOBAL_LIMITED", {
+      retryAfterSec: Math.ceil((RATE_WINDOW_MS - (nowMs - gStart)) / 1000),
+    });
+  } else {
+    tx.update(globalRef, { count: FieldValue.increment(1) });
+  }
+
+  // Per-user ban check
+  const bannedUntil = userData.bannedUntil || 0;
+  if (bannedUntil > nowMs) {
+    throw makeErr("BANNED", {
+      retryAfterSec: Math.ceil((bannedUntil - nowMs) / 1000),
+    });
+  }
+
+  // Per-user rate limit
+  const rlStart = userData.rateLimitWindowStart || 0;
+  const rlCount = userData.rateLimitCount || 0;
+  let violations = userData.rateLimitViolations || 0;
+
+  if (nowMs - rlStart > RATE_WINDOW_MS) {
+    tx.update(userRef, { rateLimitWindowStart: nowMs, rateLimitCount: 1 });
+    return;
+  }
+
+  if (rlCount >= RATE_MAX) {
+    violations++;
+    if (violations >= VIOLATION_THRESHOLD) {
+      tx.update(userRef, { bannedUntil: nowMs + BAN_MS, rateLimitViolations: 0 });
+      throw makeErr("BANNED", {
+        retryAfterSec: Math.ceil(BAN_MS / 1000),
+        reason: "Too many rate-limit violations — account temporarily suspended",
+      });
+    }
+    tx.update(userRef, { rateLimitViolations: violations });
+    throw makeErr("RATE_LIMITED", {
+      retryAfterSec: Math.ceil((RATE_WINDOW_MS - (nowMs - rlStart)) / 1000),
+      violationsRemaining: VIOLATION_THRESHOLD - violations,
+    });
+  }
+
+  tx.update(userRef, { rateLimitCount: FieldValue.increment(1) });
+}
+
 // ── Tasks ──
 
 export const taskRepo: TaskRepository = {
@@ -102,44 +183,17 @@ export const taskRepo: TaskRepository = {
 
   async createTask(userId, data, userEmail?: string) {
     // Atomic quota + rate limit + soft ban check via Firestore transaction.
-    // Works across serverless instances (unlike in-memory counters).
     const userRef = db.collection("users").doc(userId);
-
-    // Hard caps — applied on top of user's plan limits to prevent abuse
-    const RATE_WINDOW_MS = 60 * 1000;
-    const RATE_MAX = 60;           // max 60 tasks/min
-    const DAY_MS = 24 * 60 * 60 * 1000;
-    const DAILY_MAX = 200;          // max 200 tasks/day (all plans)
-    const MONTHLY_MAX_PAID = 2000;  // hard cap for paid users
-    const VIOLATION_THRESHOLD = 3;  // 3 rate-limit hits → ban
-    const BAN_MS = 24 * 60 * 60 * 1000; // 24 hours
-
-    function makeErr(code: string, extras: Record<string, any> = {}) {
-      const e = new Error(code);
-      (e as any).code = code;
-      Object.assign(e as any, extras);
-      return e;
-    }
 
     await db.runTransaction(async (tx) => {
       const userSnap = await tx.get(userRef);
       const userData = userSnap.data() || {};
       const nowMs = Date.now();
 
-      // 1. Soft ban — if user is currently banned, reject immediately
-      const bannedUntil = userData.bannedUntil || 0;
-      if (bannedUntil > nowMs) {
-        throw makeErr("BANNED", {
-          retryAfterSec: Math.ceil((bannedUntil - nowMs) / 1000),
-        });
-      }
-
-      // 2. Monthly quota — apply plan limit OR hard cap for paid users
+      // Monthly quota (create-specific)
       const monthlyLimitRaw = userData.taskLimitPerMonth || 50;
       const membershipLevel = (userData.membershipLevel || "free").toLowerCase();
       const isPaid = membershipLevel !== "free";
-      // Free users keep their plan limit (50). Paid users are hard-capped at 2000
-      // even if their stored limit says 999999/Infinity.
       const monthlyLimit = isPaid
         ? Math.min(monthlyLimitRaw === 999999 ? MONTHLY_MAX_PAID : monthlyLimitRaw, MONTHLY_MAX_PAID)
         : monthlyLimitRaw;
@@ -148,13 +202,10 @@ export const taskRepo: TaskRepository = {
         throw makeErr("QUOTA_EXCEEDED", { limit: monthlyLimit, used });
       }
 
-      // 3. Daily cap (resets every 24h)
+      // Daily cap (create-specific)
       const dayWindowStart = userData.dayWindowStart || 0;
-      let usedToday = userData.usedTasksToday || 0;
-      if (nowMs - dayWindowStart > DAY_MS) {
-        // New day window
-        usedToday = 0;
-      }
+      const dayExpired = nowMs - dayWindowStart > DAY_MS;
+      const usedToday = dayExpired ? 0 : (userData.usedTasksToday || 0);
       if (usedToday >= DAILY_MAX) {
         throw makeErr("DAILY_LIMIT", {
           limit: DAILY_MAX,
@@ -162,47 +213,14 @@ export const taskRepo: TaskRepository = {
         });
       }
 
-      // 4. Rate limit (60/min) with violation tracking
-      const rlStart = userData.rateLimitWindowStart || 0;
-      const rlCount = userData.rateLimitCount || 0;
-      let violations = userData.rateLimitViolations || 0;
+      // Shared: ban + rate limit + global rate limit
+      await enforceRateLimit(tx, userRef, userData, nowMs);
 
-      if (nowMs - rlStart > RATE_WINDOW_MS) {
-        // New rate window — reset count, keep violations
-        tx.update(userRef, {
-          rateLimitWindowStart: nowMs,
-          rateLimitCount: 1,
-          // Update daily counter
-          usedTasksToday: nowMs - dayWindowStart > DAY_MS ? 1 : FieldValue.increment(1),
-          dayWindowStart: nowMs - dayWindowStart > DAY_MS ? nowMs : dayWindowStart,
-        });
-      } else if (rlCount >= RATE_MAX) {
-        // Rate limited — increment violation count and possibly ban
-        violations++;
-        if (violations >= VIOLATION_THRESHOLD) {
-          // Soft ban for 24h + reset violations
-          tx.update(userRef, {
-            bannedUntil: nowMs + BAN_MS,
-            rateLimitViolations: 0,
-          });
-          throw makeErr("BANNED", {
-            retryAfterSec: Math.ceil(BAN_MS / 1000),
-            reason: "Too many rate-limit violations — account temporarily suspended",
-          });
-        }
-        tx.update(userRef, { rateLimitViolations: violations });
-        throw makeErr("RATE_LIMITED", {
-          retryAfterSec: Math.ceil((RATE_WINDOW_MS - (nowMs - rlStart)) / 1000),
-          violationsRemaining: VIOLATION_THRESHOLD - violations,
-        });
-      } else {
-        // Within rate window — increment counters
-        tx.update(userRef, {
-          rateLimitCount: FieldValue.increment(1),
-          usedTasksToday: nowMs - dayWindowStart > DAY_MS ? 1 : FieldValue.increment(1),
-          dayWindowStart: nowMs - dayWindowStart > DAY_MS ? nowMs : dayWindowStart,
-        });
-      }
+      // Increment daily counter (only for create)
+      tx.update(userRef, {
+        usedTasksToday: dayExpired ? 1 : FieldValue.increment(1),
+        dayWindowStart: dayExpired ? nowMs : dayWindowStart,
+      });
     });
 
     // Use mobile app field names for full compatibility
@@ -345,29 +363,45 @@ export const taskRepo: TaskRepository = {
       update.startDate = sd ? Timestamp.fromDate(new Date(sd)) : null;
     }
 
-    // Try personal tasks first, then search in groups the user is a member of
+    // Find the task location BEFORE starting the rate-limit transaction.
+    // (Firestore transactions require all reads to happen before writes.)
+    let taskRef: FirebaseFirestore.DocumentReference | null = null;
+
     const personalRef = db.collection("usertasks").doc(userId).collection("tasks").doc(taskId);
     const personalDoc = await personalRef.get();
     if (personalDoc.exists) {
-      await personalRef.update(update);
-      return;
-    }
-
-    // Search in groups
-    const userGroupsDoc = await db.collection("usergroups").doc(userId).get();
-    if (userGroupsDoc.exists) {
-      const groupsData = userGroupsDoc.data() || {};
-      const groupIds = Object.values(groupsData).map((g: any) => g.groupId).filter(Boolean);
-      for (const gId of groupIds) {
-        const groupTaskRef = db.collection("groups").doc(gId).collection("tasks").doc(taskId);
-        const groupTaskDoc = await groupTaskRef.get();
-        if (groupTaskDoc.exists) {
-          await groupTaskRef.update(update);
-          return;
+      taskRef = personalRef;
+    } else {
+      const userGroupsDoc = await db.collection("usergroups").doc(userId).get();
+      if (userGroupsDoc.exists) {
+        const groupsData = userGroupsDoc.data() || {};
+        const groupIds = Object.values(groupsData).map((g: any) => g.groupId).filter(Boolean);
+        for (const gId of groupIds) {
+          const groupTaskRef = db.collection("groups").doc(gId).collection("tasks").doc(taskId);
+          const groupTaskDoc = await groupTaskRef.get();
+          if (groupTaskDoc.exists) {
+            taskRef = groupTaskRef;
+            break;
+          }
         }
       }
     }
-    throw new Error("Task not found");
+
+    if (!taskRef) throw new Error("Task not found");
+
+    // Now do rate-limit check + update in a single transaction
+    const userRef = db.collection("users").doc(userId);
+    await db.runTransaction(async (tx) => {
+      const userSnap = await tx.get(userRef);
+      const userData = userSnap.data() || {};
+      const nowMs = Date.now();
+
+      // Shared ban + rate limit + global rate limit
+      // (No monthly quota / daily cap — updates don't count toward creates)
+      await enforceRateLimit(tx, userRef, userData, nowMs);
+
+      tx.update(taskRef!, update);
+    });
   },
 
   async deleteTask(userId, taskId) {
