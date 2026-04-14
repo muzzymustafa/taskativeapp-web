@@ -69,11 +69,26 @@
     "unlimitedArchive": "Sınırsız arşiv",
     "prioritySupport": "Öncelikli destek"
   },
+  "platforms": {
+    "title": "Taskative,",
+    "title2": "her yerde çalışır",
+    "subtitle": "Görevleriniz mobil, web ve tarayıcı uzantısı arasında gerçek zamanlı senkronize olur. Hangisini severseniz oradan başlayın.",
+    "mobile": "Mobil Uygulama",
+    "mobileDesc": "Widget, güvenilir hatırlatmalar ve çevrimdışı destekli yerel Android uygulaması. Her yerden yakalayın, ana ekrandan işaretleyin.",
+    "mobileCta": "Google Play'de aç",
+    "web": "Web Uygulaması",
+    "webDesc": "Herhangi bir tarayıcıda tam panel — takvim, zaman çizelgesi, Gantt, raporlar. Kurulum gerektirmez. Giriş yapın ve planlayın.",
+    "webCta": "Web uygulamasını aç",
+    "extension": "Tarayıcı Uzantısı",
+    "extensionDesc": "Herhangi bir web sayfasındaki metine sağ tıklayarak göreve dönüştürün. Gmail, Notion, makaleler, araştırma için ideal.",
+    "extensionCta": "Chrome'a ekle"
+  },
   "cta": {
     "title": "Organize olmaya hazır mısınız?",
     "subtitle": "Görevlerini Taskative ile yöneten ekiplere katılın. Ücretsiz başlayın — kredi kartı gerekmez.",
     "button": "Google Play'den İndir",
-    "webAppSoon": "Web uygulaması yakında — görevlerinizi tarayıcınızdan yönetin"
+    "webAppSoon": "Web uygulaması yakında — görevlerinizi tarayıcınızdan yönetin",
+    "installExtension": "Uzantıyı Yükle"
   },
   "footer": {
     "privacy": "Gizlilik Politikası",

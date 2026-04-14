@@ -69,11 +69,26 @@
     "unlimitedArchive": "Unlimited archive",
     "prioritySupport": "Priority support"
   },
+  "platforms": {
+    "title": "Taskative,",
+    "title2": "everywhere you work",
+    "subtitle": "Your tasks sync in real time across mobile, web, and browser extension. Pick your favorite and get started.",
+    "mobile": "Mobile App",
+    "mobileDesc": "Native Android with widgets, reliable reminders, and offline support. Capture on the go, check off from home screen.",
+    "mobileCta": "Get it on Google Play",
+    "web": "Web App",
+    "webDesc": "Full dashboard in any browser — calendar, timeline, Gantt, reports. No installation required. Just sign in and plan.",
+    "webCta": "Open web app",
+    "extension": "Browser Extension",
+    "extensionDesc": "Right-click any text on any webpage to turn it into a task. Perfect for Gmail, Notion, articles, research.",
+    "extensionCta": "Add to Chrome"
+  },
   "cta": {
     "title": "Ready to get organized?",
     "subtitle": "Join teams managing their tasks with Taskative. Start free — no credit card required.",
     "button": "Download on Google Play",
-    "webAppSoon": "Web app coming soon — manage tasks from your browser"
+    "webAppSoon": "Web app coming soon — manage tasks from your browser",
+    "installExtension": "Install Extension"
   },
   "footer": {
     "privacy": "Privacy Policy",

@@ -69,11 +69,26 @@
     "unlimitedArchive": "Unbegrenztes Archiv",
     "prioritySupport": "Prioritäts-Support"
   },
+  "platforms": {
+    "title": "Taskative,",
+    "title2": "überall wo Sie arbeiten",
+    "subtitle": "Ihre Aufgaben synchronisieren in Echtzeit zwischen Mobil, Web und Browser-Erweiterung.",
+    "mobile": "Mobile App",
+    "mobileDesc": "Native Android-App mit Widgets, Erinnerungen und Offline-Unterstützung.",
+    "mobileCta": "Bei Google Play holen",
+    "web": "Web-App",
+    "webDesc": "Volles Dashboard im Browser — Kalender, Timeline, Gantt, Berichte. Keine Installation nötig.",
+    "webCta": "Web-App öffnen",
+    "extension": "Browser-Erweiterung",
+    "extensionDesc": "Klicken Sie mit der rechten Maustaste auf Text jeder Webseite, um ihn als Aufgabe hinzuzufügen.",
+    "extensionCta": "Zu Chrome hinzufügen"
+  },
   "cta": {
     "title": "Bereit, organisiert zu werden?",
     "subtitle": "Starten Sie kostenlos — keine Kreditkarte erforderlich.",
     "button": "Bei Google Play herunterladen",
-    "webAppSoon": "Web-App kommt bald — verwalten Sie Aufgaben im Browser"
+    "webAppSoon": "Web-App kommt bald — verwalten Sie Aufgaben im Browser",
+    "installExtension": "Erweiterung installieren"
   },
   "footer": {
     "privacy": "Datenschutz",

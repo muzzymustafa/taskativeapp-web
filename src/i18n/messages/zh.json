@@ -69,11 +69,26 @@
     "unlimitedArchive": "无限存档",
     "prioritySupport": "优先支持"
   },
+  "platforms": {
+    "title": "Taskative，",
+    "title2": "随处可用",
+    "subtitle": "您的任务在移动端、网页和浏览器扩展之间实时同步。",
+    "mobile": "移动应用",
+    "mobileDesc": "原生 Android 应用，支持小部件、可靠提醒和离线使用。",
+    "mobileCta": "在 Google Play 获取",
+    "web": "网页应用",
+    "webDesc": "任何浏览器中的完整仪表板——日历、时间线、Gantt 图、报告。无需安装。",
+    "webCta": "打开网页应用",
+    "extension": "浏览器扩展",
+    "extensionDesc": "在任何网页上右键点击文本即可将其转换为任务。适合 Gmail、Notion。",
+    "extensionCta": "添加到 Chrome"
+  },
   "cta": {
     "title": "准备好组织起来了吗？",
     "subtitle": "免费开始——无需信用卡。",
     "button": "在 Google Play 下载",
-    "webAppSoon": "网页应用即将推出——从浏览器管理您的任务"
+    "webAppSoon": "网页应用即将推出——从浏览器管理您的任务",
+    "installExtension": "安装扩展"
   },
   "footer": {
     "privacy": "隐私政策",

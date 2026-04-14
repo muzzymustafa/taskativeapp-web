@@ -69,11 +69,26 @@
     "unlimitedArchive": "Archivo ilimitado",
     "prioritySupport": "Soporte prioritario"
   },
+  "platforms": {
+    "title": "Taskative,",
+    "title2": "en todas partes",
+    "subtitle": "Tus tareas se sincronizan en tiempo real entre móvil, web y extensión del navegador.",
+    "mobile": "App Móvil",
+    "mobileDesc": "App Android nativa con widgets, recordatorios confiables y soporte offline.",
+    "mobileCta": "Obtener en Google Play",
+    "web": "App Web",
+    "webDesc": "Panel completo en cualquier navegador — calendario, línea de tiempo, Gantt, informes. Sin instalación.",
+    "webCta": "Abrir app web",
+    "extension": "Extensión del Navegador",
+    "extensionDesc": "Haz clic derecho en cualquier texto de una página para convertirlo en tarea. Perfecto para Gmail, Notion.",
+    "extensionCta": "Añadir a Chrome"
+  },
   "cta": {
     "title": "¿Listo para organizarte?",
     "subtitle": "Empieza gratis — no se requiere tarjeta de crédito.",
     "button": "Descargar en Google Play",
-    "webAppSoon": "App web próximamente — gestiona tareas desde tu navegador"
+    "webAppSoon": "App web próximamente — gestiona tareas desde tu navegador",
+    "installExtension": "Instalar Extensión"
   },
   "footer": {
     "privacy": "Política de Privacidad",
