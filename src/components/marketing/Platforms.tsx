@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useTranslations } from "next-intl";
+import { trackDownload } from "@/lib/analytics";
 
 const CHROME_STORE_URL = "https://chromewebstore.google.com/detail/iflpolhmmeknhcnmdbekogkfjjoofiop";
 const PLAY_STORE_URL = "https://play.google.com/store/apps/details?id=com.taskative";
@@ -35,6 +36,7 @@ export function Platforms() {
             cta={t("mobileCta")}
             href={PLAY_STORE_URL}
             external
+            onClick={() => trackDownload("platforms")}
           />
 
           {/* WEB */}
@@ -77,14 +79,16 @@ interface PlatformCardProps {
   cta: string;
   href: string;
   external?: boolean;
+  onClick?: () => void;
 }
 
-function PlatformCard({ imageSrc, imageAlt, imageClassName, badge, title, description, cta, href, external }: PlatformCardProps) {
+function PlatformCard({ imageSrc, imageAlt, imageClassName, badge, title, description, cta, href, external, onClick }: PlatformCardProps) {
   return (
     <a
       href={href}
       target={external ? "_blank" : undefined}
       rel={external ? "noopener noreferrer" : undefined}
+      onClick={onClick}
       className="group flex flex-col rounded-3xl bg-surface-1 border border-outline overflow-hidden hover:border-primary/40 transition-all"
       style={{ boxShadow: "var(--shadow-1)", transitionDuration: "var(--dur-2)", transitionTimingFunction: "var(--ease)" }}
     >

@@ -1,6 +1,7 @@
 "use client";
 
 import { useTranslations } from "next-intl";
+import { trackDownload } from "@/lib/analytics";
 
 export function CTA() {
   const t = useTranslations("cta");
@@ -27,6 +28,7 @@ export function CTA() {
                 href="https://play.google.com/store/apps/details?id=com.taskative"
                 target="_blank"
                 rel="noopener noreferrer"
+                onClick={() => trackDownload("cta")}
                 className="inline-flex items-center gap-2.5 px-6 py-3.5 rounded-full bg-primary text-white font-semibold text-sm hover:bg-primary-hover transition-colors"
                 style={{ boxShadow: '0 4px 20px rgba(46, 139, 52, 0.25)', transitionDuration: 'var(--dur-2)' }}
               >

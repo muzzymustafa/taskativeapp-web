@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { useTranslations } from "next-intl";
 import { Logo } from "./Logo";
+import { trackDownload } from "@/lib/analytics";
 
 export function Header() {
   const t = useTranslations("header");
@@ -15,12 +16,15 @@ export function Header() {
         </Link>
 
         <div className="hidden sm:flex items-center gap-8 text-sm text-text-muted">
-          <a href="#features" className="hover:text-primary transition-colors" style={{ transitionDuration: 'var(--dur-1)' }}>
+          <a href="/#features" className="hover:text-primary transition-colors" style={{ transitionDuration: 'var(--dur-1)' }}>
             {t("features")}
           </a>
-          <a href="#pricing" className="hover:text-primary transition-colors" style={{ transitionDuration: 'var(--dur-1)' }}>
+          <a href="/#pricing" className="hover:text-primary transition-colors" style={{ transitionDuration: 'var(--dur-1)' }}>
             {t("pricing")}
           </a>
+          <Link href="/guide" className="hover:text-primary transition-colors" style={{ transitionDuration: 'var(--dur-1)' }}>
+            Guide
+          </Link>
         </div>
 
         <div className="flex items-center gap-3">
@@ -35,6 +39,7 @@ export function Header() {
             href="https://play.google.com/store/apps/details?id=com.taskative"
             target="_blank"
             rel="noopener noreferrer"
+            onClick={() => trackDownload("header")}
             className="inline-flex items-center gap-2 px-5 py-2 rounded-full bg-primary text-white text-sm font-semibold hover:bg-primary-hover transition-colors shadow-sm"
             style={{ transitionDuration: 'var(--dur-1)' }}
           >

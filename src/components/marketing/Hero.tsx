@@ -2,6 +2,7 @@
 
 import Image from "next/image";
 import { useTranslations } from "next-intl";
+import { trackDownload } from "@/lib/analytics";
 
 export function Hero() {
   const t = useTranslations("hero");
@@ -32,6 +33,7 @@ export function Hero() {
               href="https://play.google.com/store/apps/details?id=com.taskative"
               target="_blank"
               rel="noopener noreferrer"
+              onClick={() => trackDownload("hero")}
               className="inline-flex items-center gap-3 px-8 py-4 rounded-full bg-primary text-white font-semibold text-base hover:bg-primary-hover transition-colors"
               style={{ boxShadow: '0 4px 20px rgba(46, 139, 52, 0.25)', transitionDuration: 'var(--dur-2)' }}
             >
