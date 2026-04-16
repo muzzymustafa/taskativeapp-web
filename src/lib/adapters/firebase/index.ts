@@ -1,5 +1,6 @@
 import { db } from "@/lib/firebase/admin";
 import { FieldValue, Timestamp } from "firebase-admin/firestore";
+import { notifySecurity } from "@/lib/notify";
 import type {
   Task,
   Group,
@@ -51,6 +52,16 @@ function makeErr(code: string, extras: Record<string, any> = {}) {
   (e as any).code = code;
   Object.assign(e as any, extras);
   return e;
+}
+
+// High-signal events only (BANNED, GLOBAL_LIMITED). Rate-limit / daily-limit are too frequent to be useful.
+function fireSecurityAlert(userId: string, err: any) {
+  const code = err?.code;
+  if (code === "BANNED") {
+    notifySecurity("banned", { uid: userId, reason: err.reason, extras: { retryAfterSec: err.retryAfterSec } });
+  } else if (code === "GLOBAL_LIMITED") {
+    notifySecurity("global_cap_hit", { uid: userId, extras: { retryAfterSec: err.retryAfterSec } });
+  }
 }
 
 // Shared constants
@@ -185,43 +196,49 @@ export const taskRepo: TaskRepository = {
     // Atomic quota + rate limit + soft ban check via Firestore transaction.
     const userRef = db.collection("users").doc(userId);
 
-    await db.runTransaction(async (tx) => {
-      const userSnap = await tx.get(userRef);
-      const userData = userSnap.data() || {};
-      const nowMs = Date.now();
+    try {
+      await db.runTransaction(async (tx) => {
+        const userSnap = await tx.get(userRef);
+        const userData = userSnap.data() || {};
+        const nowMs = Date.now();
 
-      // Monthly quota (create-specific)
-      const monthlyLimitRaw = userData.taskLimitPerMonth || 50;
-      const membershipLevel = (userData.membershipLevel || "free").toLowerCase();
-      const isPaid = membershipLevel !== "free";
-      const monthlyLimit = isPaid
-        ? Math.min(monthlyLimitRaw === 999999 ? MONTHLY_MAX_PAID : monthlyLimitRaw, MONTHLY_MAX_PAID)
-        : monthlyLimitRaw;
-      const used = userData.usedTasksThisMonth || 0;
-      if (used >= monthlyLimit) {
-        throw makeErr("QUOTA_EXCEEDED", { limit: monthlyLimit, used });
-      }
+        // Monthly quota (create-specific)
+        const monthlyLimitRaw = userData.taskLimitPerMonth || 50;
+        const membershipLevel = (userData.membershipLevel || "free").toLowerCase();
+        const isPaid = membershipLevel !== "free";
+        const monthlyLimit = isPaid
+          ? Math.min(monthlyLimitRaw === 999999 ? MONTHLY_MAX_PAID : monthlyLimitRaw, MONTHLY_MAX_PAID)
+          : monthlyLimitRaw;
+        const used = userData.usedTasksThisMonth || 0;
+        if (used >= monthlyLimit) {
+          throw makeErr("QUOTA_EXCEEDED", { limit: monthlyLimit, used });
+        }
 
-      // Daily cap (create-specific)
-      const dayWindowStart = userData.dayWindowStart || 0;
-      const dayExpired = nowMs - dayWindowStart > DAY_MS;
-      const usedToday = dayExpired ? 0 : (userData.usedTasksToday || 0);
-      if (usedToday >= DAILY_MAX) {
-        throw makeErr("DAILY_LIMIT", {
-          limit: DAILY_MAX,
-          retryAfterSec: Math.ceil((dayWindowStart + DAY_MS - nowMs) / 1000),
+        // Daily cap (counts create + update + delete — unified write budget)
+        const dayWindowStart = userData.dayWindowStart || 0;
+        const dayExpired = nowMs - dayWindowStart > DAY_MS;
+        const dailyWrites = dayExpired ? 0 : (userData.dailyWrites || userData.usedTasksToday || 0);
+        if (dailyWrites >= DAILY_MAX) {
+          throw makeErr("DAILY_LIMIT", {
+            limit: DAILY_MAX,
+            retryAfterSec: Math.ceil((dayWindowStart + DAY_MS - nowMs) / 1000),
+          });
+        }
+
+        // Shared: ban + rate limit + global rate limit
+        await enforceRateLimit(tx, userRef, userData, nowMs);
+
+        // Increment unified daily writes counter
+        tx.update(userRef, {
+          dailyWrites: dayExpired ? 1 : FieldValue.increment(1),
+          usedTasksToday: dayExpired ? 1 : FieldValue.increment(1),
+          dayWindowStart: dayExpired ? nowMs : dayWindowStart,
         });
-      }
-
-      // Shared: ban + rate limit + global rate limit
-      await enforceRateLimit(tx, userRef, userData, nowMs);
-
-      // Increment daily counter (only for create)
-      tx.update(userRef, {
-        usedTasksToday: dayExpired ? 1 : FieldValue.increment(1),
-        dayWindowStart: dayExpired ? nowMs : dayWindowStart,
       });
-    });
+    } catch (e) {
+      fireSecurityAlert(userId, e);
+      throw e;
+    }
 
     // Use mobile app field names for full compatibility
     const nowMs = Date.now();
@@ -391,17 +408,39 @@ export const taskRepo: TaskRepository = {
 
     // Now do rate-limit check + update in a single transaction
     const userRef = db.collection("users").doc(userId);
-    await db.runTransaction(async (tx) => {
-      const userSnap = await tx.get(userRef);
-      const userData = userSnap.data() || {};
-      const nowMs = Date.now();
+    try {
+      await db.runTransaction(async (tx) => {
+        const userSnap = await tx.get(userRef);
+        const userData = userSnap.data() || {};
+        const nowMs = Date.now();
 
-      // Shared ban + rate limit + global rate limit
-      // (No monthly quota / daily cap — updates don't count toward creates)
-      await enforceRateLimit(tx, userRef, userData, nowMs);
+        // Daily cap — updates/deletes count toward the same unified write budget as creates.
+        // Previously unchecked; closes loophole where attacker PATCH-spams a single task.
+        const dayWindowStart = userData.dayWindowStart || 0;
+        const dayExpired = nowMs - dayWindowStart > DAY_MS;
+        const dailyWrites = dayExpired ? 0 : (userData.dailyWrites || userData.usedTasksToday || 0);
+        if (dailyWrites >= DAILY_MAX) {
+          throw makeErr("DAILY_LIMIT", {
+            limit: DAILY_MAX,
+            retryAfterSec: Math.ceil((dayWindowStart + DAY_MS - nowMs) / 1000),
+          });
+        }
 
-      tx.update(taskRef!, update);
-    });
+        // Shared ban + rate limit + global rate limit
+        await enforceRateLimit(tx, userRef, userData, nowMs);
+
+        // Increment unified daily writes counter
+        tx.update(userRef, {
+          dailyWrites: dayExpired ? 1 : FieldValue.increment(1),
+          dayWindowStart: dayExpired ? nowMs : dayWindowStart,
+        });
+
+        tx.update(taskRef!, update);
+      });
+    } catch (e) {
+      fireSecurityAlert(userId, e);
+      throw e;
+    }
   },
 
   async deleteTask(userId, taskId) {
