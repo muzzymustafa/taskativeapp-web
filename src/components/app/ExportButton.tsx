@@ -1,8 +1,11 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { useState } from "react";
 
 export function ExportButton() {
+  const t = useTranslations("app");
   const [open, setOpen] = useState(false);
   const [exporting, setExporting] = useState(false);
 
@@ -18,7 +21,7 @@ export function ExportButton() {
       let tasks = await fetchTasks();
       if (!includeAll) tasks = tasks.filter((t: any) => t.status !== "cancelled");
 
-      const headers = ["Title", "Description", "Status", "Due Date", "Created", "Checklist", "Type"];
+      const headers = [t("colTitle"), t("colDescription"), t("colStatus"), t("colDueDate"), t("colCreated"), t("colChecklist"), t("colType")];
       const rows = tasks.map((t: any) => {
         const checklist = (t.checklist || [])
           .map((c: any) => `${c.done ? "[x]" : "[ ]"} ${c.text}`)
@@ -87,7 +90,7 @@ export function ExportButton() {
         <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M16.5 12L12 16.5m0 0L7.5 12m4.5 4.5V3" />
         </svg>
-        Export
+        {t("export")}
       </button>
 
       {open && (
@@ -100,7 +103,7 @@ export function ExportButton() {
               className="w-full text-left px-4 py-2.5 text-sm text-text hover:bg-surface-2 transition-colors flex items-center gap-2"
             >
               <span className="text-xs font-mono text-text-dim">.csv</span>
-              Active tasks
+              {t("exportActive")}
             </button>
             <button
               onClick={() => exportCSV(true)}
@@ -108,7 +111,7 @@ export function ExportButton() {
               className="w-full text-left px-4 py-2.5 text-sm text-text hover:bg-surface-2 transition-colors flex items-center gap-2 border-t border-outline/50"
             >
               <span className="text-xs font-mono text-text-dim">.csv</span>
-              All tasks
+              {t("exportAll")}
             </button>
             <button
               onClick={exportJSON}
@@ -116,7 +119,7 @@ export function ExportButton() {
               className="w-full text-left px-4 py-2.5 text-sm text-text hover:bg-surface-2 transition-colors flex items-center gap-2 border-t border-outline/50"
             >
               <span className="text-xs font-mono text-text-dim">.json</span>
-              JSON (active)
+              {t("exportJson")}
             </button>
           </div>
         </>

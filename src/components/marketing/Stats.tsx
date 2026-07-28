@@ -6,7 +6,7 @@ export function Stats() {
   const t = useTranslations("stats");
 
   const stats = [
-    { value: "50+", label: t("tasks"), color: "text-primary" },
+    { value: "50", label: t("tasks"), color: "text-primary" },
     { value: "6", label: t("languages"), color: "text-warmth" },
     { value: "0", label: t("ads"), color: "text-success" },
   ];

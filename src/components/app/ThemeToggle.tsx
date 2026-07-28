@@ -1,10 +1,13 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { useEffect, useState } from "react";
 
 type Theme = "auto" | "light" | "dark";
 
 export function ThemeToggle() {
+  const tr = useTranslations("app");
   const [theme, setTheme] = useState<Theme>("auto");
   const [open, setOpen] = useState(false);
 
@@ -47,7 +50,7 @@ export function ThemeToggle() {
       <button
         onClick={() => setOpen(!open)}
         className="p-1.5 rounded-lg text-text-muted hover:text-text hover:bg-surface-2 transition-colors"
-        title="Theme"
+        title={tr("theme")}
       >
         {icon}
       </button>
@@ -63,7 +66,7 @@ export function ThemeToggle() {
                   theme === t ? "bg-primary/10 text-primary font-medium" : "text-text-muted hover:bg-surface-2"
                 }`}
               >
-                <span className="capitalize">{t}</span>
+                <span>{tr("theme_" + t)}</span>
                 {theme === t && (
                   <svg className="w-3 h-3 ml-auto" fill="none" stroke="currentColor" strokeWidth={3} viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M4.5 12.75l6 6 9-13.5" />

@@ -1,5 +1,8 @@
 "use client";
 
+import { useTranslations, useLocale } from "next-intl";
+import { Link } from "@/i18n/navigation";
+
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter, useParams } from "next/navigation";
@@ -19,6 +22,8 @@ interface GroupDetail {
 }
 
 export default function GroupDetailPage() {
+  const t = useTranslations("app");
+  const locale = useLocale();
   const { data: session, status } = useSession();
   const router = useRouter();
   const params = useParams();
@@ -71,7 +76,7 @@ export default function GroupDetailPage() {
       <div className="min-h-screen flex items-center justify-center bg-bg">
         <div className="flex items-center gap-3 text-text-muted">
           <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-          Loading...
+          {t("loading")}
         </div>
       </div>
     );
@@ -119,7 +124,7 @@ export default function GroupDetailPage() {
         ) : error ? (
           <div className="text-center py-20">
             <p className="text-danger text-base mb-2">{error}</p>
-            <a href="/groups" className="text-sm text-primary hover:underline">Back to groups</a>
+            <Link href="/groups" className="text-sm text-primary hover:underline">{t("backToGroups")}</Link>
           </div>
         ) : group ? (
           <>
@@ -137,7 +142,7 @@ export default function GroupDetailPage() {
                 <div>
                   <h1 className="text-xl font-semibold text-text">{group.groupName}</h1>
                   <p className="text-sm text-text-muted">
-                    Created {new Date(group.createdAt).toLocaleDateString("en", { month: "short", day: "numeric", year: "numeric" })}
+                    {t("createdAt", { date: new Date(group.createdAt).toLocaleDateString(locale, { month: "short", day: "numeric", year: "numeric" }) })}
                   </p>
                 </div>
               </div>
@@ -159,26 +164,26 @@ export default function GroupDetailPage() {
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-6">
               <div className="p-4 rounded-2xl bg-surface-1 border border-outline" style={{ boxShadow: "var(--shadow-1)" }}>
                 <p className="text-2xl font-bold text-text tracking-tight">{tasks.filter(t=>t.status!=='cancelled').length}</p>
-                <p className="text-xs text-text-dim mt-0.5">Total</p>
+                <p className="text-xs text-text-dim mt-0.5">{t("total")}</p>
               </div>
               <div className="p-4 rounded-2xl bg-surface-1 border border-outline" style={{ boxShadow: "var(--shadow-1)" }}>
                 <p className="text-2xl font-bold text-primary tracking-tight">{pending.length}</p>
-                <p className="text-xs text-text-dim mt-0.5">Active</p>
+                <p className="text-xs text-text-dim mt-0.5">{t("filterActive")}</p>
               </div>
               <div className="p-4 rounded-2xl bg-surface-1 border border-outline" style={{ boxShadow: "var(--shadow-1)" }}>
                 <p className="text-2xl font-bold text-success tracking-tight">{completionRate}%</p>
-                <p className="text-xs text-text-dim mt-0.5">Completed</p>
+                <p className="text-xs text-text-dim mt-0.5">{t("statCompleted")}</p>
               </div>
               <div className={`p-4 rounded-2xl border ${overdue.length > 0 ? "bg-danger-light border-danger/20" : "bg-surface-1 border-outline"}`} style={{ boxShadow: "var(--shadow-1)" }}>
                 <p className={`text-2xl font-bold tracking-tight ${overdue.length > 0 ? "text-danger" : "text-text-dim"}`}>{overdue.length}</p>
-                <p className={`text-xs mt-0.5 ${overdue.length > 0 ? "text-danger/70" : "text-text-dim"}`}>Overdue</p>
+                <p className={`text-xs mt-0.5 ${overdue.length > 0 ? "text-danger/70" : "text-text-dim"}`}>{t("statusOverdue")}</p>
               </div>
             </div>
 
             {/* Member workload */}
             {memberStats.length > 0 && memberStats.some((m) => m.total > 0) && (
               <div className="p-5 rounded-2xl bg-surface-1 border border-outline mb-6" style={{ boxShadow: "var(--shadow-1)" }}>
-                <h2 className="text-xs font-semibold text-text-dim uppercase tracking-wider mb-4">Workload Distribution</h2>
+                <h2 className="text-xs font-semibold text-text-dim uppercase tracking-wider mb-4">{t("workloadDistribution")}</h2>
                 <div className="space-y-3">
                   {memberStats.map((m) => {
                     const progress = m.total > 0 ? (m.done / m.total) * 100 : 0;
@@ -218,7 +223,7 @@ export default function GroupDetailPage() {
                   type="text"
                   value={newTask}
                   onChange={(e) => setNewTask(e.target.value)}
-                  placeholder={`Add a task to ${group.groupName}...`}
+                  placeholder={t("addTaskToGroup", { group: group.groupName })}
                   className="flex-1 bg-transparent text-sm text-text placeholder:text-text-dim focus:outline-none"
                 />
                 {newTask.trim() && (
@@ -236,9 +241,9 @@ export default function GroupDetailPage() {
             {/* Filter chips */}
             <div className="flex gap-2 mb-4">
               {([
-                { key: "all" as const, label: "All", count: tasks.filter(t=>t.status!=='cancelled').length },
-                { key: "pending" as const, label: "Active", count: pending.length },
-                { key: "done" as const, label: "Done", count: done.length },
+                { key: "all" as const, label: t("filterAll"), count: tasks.filter(t=>t.status!=='cancelled').length },
+                { key: "pending" as const, label: t("filterActive"), count: pending.length },
+                { key: "done" as const, label: t("filterDone"), count: done.length },
               ]).map((f) => (
                 <button
                   key={f.key}
@@ -255,8 +260,8 @@ export default function GroupDetailPage() {
             {/* Tasks */}
             {filtered.length === 0 ? (
               <div className="text-center py-16">
-                <p className="text-text-muted">No tasks here</p>
-                <p className="text-sm text-text-dim mt-1">Add one above to get started</p>
+                <p className="text-text-muted">{t("emptyTitle")}</p>
+                <p className="text-sm text-text-dim mt-1">{t("addOneAbove")}</p>
               </div>
             ) : (
               <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -303,13 +308,13 @@ export default function GroupDetailPage() {
                             <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                               <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
                             </svg>
-                            {new Date(task.dueDate).toLocaleDateString("en", { month: "short", day: "numeric" })}
+                            {new Date(task.dueDate).toLocaleDateString(locale, { month: "short", day: "numeric" })}
                           </span>
                         )}
                         <span className={`ml-auto px-2 py-0.5 rounded-md text-[11px] font-medium ${
                           task.status === "done" ? "bg-success-light text-success" : isOverdue ? "bg-danger-light text-danger" : "bg-warmth-soft text-warmth-deep"
                         }`}>
-                          {task.status === "done" ? "Done" : isOverdue ? "Overdue" : "Pending"}
+                          {task.status === "done" ? t("statusDone") : isOverdue ? t("statusOverdue") : t("statusPending")}
                         </span>
                       </div>
                     </button>

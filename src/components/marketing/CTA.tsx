@@ -45,7 +45,7 @@ export function CTA() {
                 <svg className="w-5 h-5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M12 21a9.004 9.004 0 008.716-6.747M12 21a9.004 9.004 0 01-8.716-6.747M12 21c2.485 0 4.5-4.03 4.5-9S14.485 3 12 3m0 18c-2.485 0-4.5-4.03-4.5-9S9.515 3 12 3m0 0a8.997 8.997 0 017.843 4.582M12 3a8.997 8.997 0 00-7.843 4.582" />
                 </svg>
-                Open Web App
+                {t("openWebApp")}
               </a>
               <a
                 href="https://chromewebstore.google.com/detail/iflpolhmmeknhcnmdbekogkfjjoofiop"

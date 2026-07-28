@@ -3,6 +3,8 @@
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
+import { useTranslations } from "next-intl";
+import { Link } from "@/i18n/navigation";
 import { Logo } from "@/components/marketing/Logo";
 import { TaskList } from "@/components/app/TaskList";
 import { CreateTaskForm } from "@/components/app/CreateTaskForm";
@@ -14,6 +16,7 @@ import type { UserProfile, Task } from "@/lib/adapters/types";
 
 export default function DashboardPage() {
   const { data: session, status } = useSession();
+  const t = useTranslations("app");
   const router = useRouter();
   const [refreshKey, setRefreshKey] = useState(0);
   const [profile, setProfile] = useState<UserProfile | null>(null);
@@ -45,7 +48,7 @@ export default function DashboardPage() {
       <div className="min-h-screen flex items-center justify-center bg-bg">
         <div className="flex items-center gap-3 text-text-muted">
           <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-          Loading...
+          {t("loading")}
         </div>
       </div>
     );
@@ -53,7 +56,7 @@ export default function DashboardPage() {
 
   if (!session) return null;
 
-  const greeting = getGreeting();
+  const greeting = t(greetingKey());
   const planLabel = profile?.membershipLevel === "lifetime" ? "Lifetime Pro" : profile?.membershipLevel || "";
 
   return (
@@ -61,7 +64,7 @@ export default function DashboardPage() {
       {/* Header */}
       <header className="sticky top-0 z-50 bg-surface-1/85 backdrop-blur-xl backdrop-saturate-150 border-b border-outline">
         <div className="max-w-4xl mx-auto flex items-center justify-between px-6 h-14">
-          <a href="/timeline"><Logo size="sm" /></a>
+          <Link href="/timeline"><Logo size="sm" /></Link>
           <AppNav />
           <UserMenu email={session.user?.email || ""} />
         </div>
@@ -73,7 +76,7 @@ export default function DashboardPage() {
           <h1 className="text-xl font-semibold text-text">{greeting}</h1>
           {profile && (
             <div className="flex items-center gap-3 mt-1 text-sm text-text-muted">
-              <span>{profile.usedTasksThisMonth} tasks this month</span>
+              <span>{t("tasksThisMonth", { count: profile.usedTasksThisMonth })}</span>
               <span className={`text-xs px-2 py-0.5 rounded-md font-semibold ${
                 planLabel.includes("Lifetime") || planLabel === "pro"
                   ? "bg-primary/10 text-primary"
@@ -90,15 +93,15 @@ export default function DashboardPage() {
           <div className="grid grid-cols-3 gap-3 mb-8">
             <div className="p-4 rounded-2xl bg-surface-1 border border-outline" style={{ boxShadow: "var(--shadow-1)" }}>
               <p className="text-2xl font-bold text-primary tracking-tight">{stats.pending}</p>
-              <p className="text-xs text-text-dim mt-0.5 font-medium">Active</p>
+              <p className="text-xs text-text-dim mt-0.5 font-medium">{t("statActive")}</p>
             </div>
             <div className="p-4 rounded-2xl bg-surface-1 border border-outline" style={{ boxShadow: "var(--shadow-1)" }}>
               <p className="text-2xl font-bold text-success tracking-tight">{stats.done}</p>
-              <p className="text-xs text-text-dim mt-0.5 font-medium">Completed</p>
+              <p className="text-xs text-text-dim mt-0.5 font-medium">{t("statCompleted")}</p>
             </div>
             <div className={`p-4 rounded-2xl border ${stats.overdue > 0 ? "bg-danger-light border-danger/20" : "bg-surface-1 border-outline"}`} style={{ boxShadow: "var(--shadow-1)" }}>
               <p className={`text-2xl font-bold tracking-tight ${stats.overdue > 0 ? "text-danger" : "text-text-dim"}`}>{stats.overdue}</p>
-              <p className={`text-xs mt-0.5 font-medium ${stats.overdue > 0 ? "text-danger/70" : "text-text-dim"}`}>Overdue</p>
+              <p className={`text-xs mt-0.5 font-medium ${stats.overdue > 0 ? "text-danger/70" : "text-text-dim"}`}>{t("statOverdue")}</p>
             </div>
           </div>
         )}
@@ -117,9 +120,9 @@ export default function DashboardPage() {
   );
 }
 
-function getGreeting(): string {
+function greetingKey(): string {
   const hour = new Date().getHours();
-  if (hour < 12) return "Good morning";
-  if (hour < 17) return "Good afternoon";
-  return "Good evening";
+  if (hour < 12) return "greetingMorning";
+  if (hour < 17) return "greetingAfternoon";
+  return "greetingEvening";
 }

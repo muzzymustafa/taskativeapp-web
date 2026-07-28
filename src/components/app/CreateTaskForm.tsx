@@ -1,10 +1,14 @@
 "use client";
 
+import { useTranslations, useLocale } from "next-intl";
+
 import { useState } from "react";
 
 type DetailField = "date" | "repeat" | "checklist" | "start" | null;
 
 export function CreateTaskForm({ onCreated }: { onCreated: () => void }) {
+  const t = useTranslations("app");
+  const locale = useLocale();
   const [title, setTitle] = useState("");
   const [loading, setLoading] = useState(false);
   const [showDetails, setShowDetails] = useState(false);
@@ -88,7 +92,7 @@ export function CreateTaskForm({ onCreated }: { onCreated: () => void }) {
           type="text"
           value={title}
           onChange={(e) => setTitle(e.target.value)}
-          placeholder="Add a task"
+          placeholder={t("addTask")}
           className="flex-1 bg-transparent text-sm text-text placeholder:text-text-dim focus:outline-none"
         />
         {title.trim() && (
@@ -98,7 +102,7 @@ export function CreateTaskForm({ onCreated }: { onCreated: () => void }) {
             className="text-sm font-medium text-primary hover:text-primary-hover disabled:opacity-40 transition-colors"
             style={{ transitionDuration: "var(--dur-1)" }}
           >
-            {loading ? "..." : "Save"}
+            {loading ? "..." : t("save")}
           </button>
         )}
       </div>
@@ -126,7 +130,7 @@ export function CreateTaskForm({ onCreated }: { onCreated: () => void }) {
             type="text"
             value={description}
             onChange={(e) => setDescription(e.target.value)}
-            placeholder="Notes (optional)"
+            placeholder={t("notesOptional")}
             className="w-full px-3 py-2 rounded-lg bg-surface-1 border border-outline text-sm text-text placeholder:text-text-dim focus:outline-none focus:border-primary transition-colors"
             style={{ transitionDuration: "var(--dur-1)" }}
           />
@@ -141,7 +145,7 @@ export function CreateTaskForm({ onCreated }: { onCreated: () => void }) {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M5.25 5.653c0-.856.917-1.398 1.667-.986l11.54 6.348a1.125 1.125 0 010 1.971l-11.54 6.347a1.125 1.125 0 01-1.667-.985V5.653z" />
                 </svg>
               }
-              label={startDate ? `Start · ${new Date(startDate).toLocaleDateString("en", { month: "short", day: "numeric" })}` : "Start"}
+              label={startDate ? t("startOn", { date: new Date(startDate).toLocaleDateString(locale, { month: "short", day: "numeric" }) }) : t("start")}
             />
             <Chip
               active={activeField === "date" || !!dueDate}
@@ -161,7 +165,7 @@ export function CreateTaskForm({ onCreated }: { onCreated: () => void }) {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182" />
                 </svg>
               }
-              label={recurrence === "none" ? "Repeat" : recurrence}
+              label={recurrence === "none" ? t("repeat") : t("repeat_" + recurrence)}
             />
             <Chip
               active={activeField === "checklist" || checklist.length > 0}
@@ -171,7 +175,7 @@ export function CreateTaskForm({ onCreated }: { onCreated: () => void }) {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
               }
-              label={checklist.length > 0 ? `Checklist · ${checklist.length}` : "Checklist"}
+              label={checklist.length > 0 ? t("checklistCount", { count: checklist.length }) : t("checklist")}
             />
           </div>
 
@@ -195,7 +199,7 @@ export function CreateTaskForm({ onCreated }: { onCreated: () => void }) {
                   type="button"
                   onClick={() => { setStartDate(""); setStartTime(""); setActiveField(null); }}
                   className="px-2 text-text-dim hover:text-danger transition-colors"
-                  title="Clear"
+                  title={t("clear")}
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -225,7 +229,7 @@ export function CreateTaskForm({ onCreated }: { onCreated: () => void }) {
                   type="button"
                   onClick={() => { setDueDate(""); setDueTime(""); setActiveField(null); }}
                   className="px-2 text-text-dim hover:text-danger transition-colors"
-                  title="Clear"
+                  title={t("clear")}
                 >
                   <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M6 18L18 6M6 6l12 12" />
@@ -243,11 +247,11 @@ export function CreateTaskForm({ onCreated }: { onCreated: () => void }) {
                 onChange={(e) => setRecurrence(e.target.value)}
                 className="w-full px-3 py-2 rounded-lg bg-surface-1 border border-outline text-xs text-text focus:outline-none focus:border-primary transition-colors cursor-pointer"
               >
-                <option value="none">No repeat</option>
-                <option value="daily">Daily</option>
-                <option value="weekly">Weekly</option>
-                <option value="monthly">Monthly</option>
-                <option value="yearly">Yearly</option>
+                <option value="none">{t("repeat_none")}</option>
+                <option value="daily">{t("repeat_daily")}</option>
+                <option value="weekly">{t("repeat_weekly")}</option>
+                <option value="monthly">{t("repeat_monthly")}</option>
+                <option value="yearly">{t("repeat_yearly")}</option>
               </select>
             </div>
           )}
@@ -261,7 +265,7 @@ export function CreateTaskForm({ onCreated }: { onCreated: () => void }) {
                   value={checklistInput}
                   onChange={(e) => setChecklistInput(e.target.value)}
                   onKeyDown={(e) => { if (e.key === "Enter") { e.preventDefault(); addChecklistItem(); } }}
-                  placeholder="Add subtask and press Enter"
+                  placeholder={t("addSubtask")}
                   className="flex-1 px-3 py-2 rounded-lg bg-surface-1 border border-outline text-xs text-text placeholder:text-text-dim focus:outline-none focus:border-primary transition-colors"
                 />
               </div>

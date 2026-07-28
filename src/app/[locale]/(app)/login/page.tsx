@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { useState } from "react";
 import { signIn } from "next-auth/react";
 import { Logo } from "@/components/marketing/Logo";
@@ -7,6 +9,7 @@ import { Logo } from "@/components/marketing/Logo";
 const FIREBASE_API_KEY = process.env.NEXT_PUBLIC_FIREBASE_API_KEY || "";
 
 export default function LoginPage() {
+  const t = useTranslations("app");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -37,9 +40,9 @@ export default function LoginPage() {
       if (data.error) {
         const code = data.error.message;
         if (code === "INVALID_LOGIN_CREDENTIALS" || code === "INVALID_PASSWORD") {
-          setError("Invalid email or password.");
+          setError(t("errInvalidCredentials"));
         } else if (code === "EMAIL_NOT_FOUND") {
-          setError("No account found with this email.");
+          setError(t("errNoAccount"));
         } else if (code === "TOO_MANY_ATTEMPTS_TRY_LATER") {
           setError("Too many attempts. Please try again later.");
         } else {
@@ -85,7 +88,7 @@ export default function LoginPage() {
       });
 
       if (res?.error) {
-        setError("Google login failed.");
+        setError(t("errGoogleFailed"));
       } else {
         window.location.replace("/timeline");
       }
@@ -95,7 +98,7 @@ export default function LoginPage() {
       } else if (err.code === "auth/unauthorized-domain") {
         setError("Domain not authorized. Add taskativeapp.com in Firebase Console → Authentication → Settings → Authorized domains.");
       } else {
-        setError(err.message || "Google sign-in failed.");
+        setError(err.message || t("errGoogleFailed"));
       }
     } finally {
       setLoading(false);
@@ -113,7 +116,7 @@ export default function LoginPage() {
           className="bg-surface-1 border border-outline rounded-2xl p-8"
           style={{ boxShadow: "var(--shadow-2)" }}
         >
-          <h1 className="text-xl font-bold text-text mb-1">Sign in</h1>
+          <h1 className="text-xl font-bold text-text mb-1">{t("signIn")}</h1>
           <p className="text-sm text-text-muted mb-6">
             Use your Taskative account
           </p>
@@ -131,7 +134,7 @@ export default function LoginPage() {
               <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" />
               <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
             </svg>
-            Continue with Google
+            {t("continueWithGoogle")}
           </button>
 
           {/* Divider */}
@@ -145,7 +148,7 @@ export default function LoginPage() {
           <form onSubmit={handleEmailLogin} className="space-y-4">
             <div>
               <label className="block text-sm font-medium text-text-2 mb-1.5">
-                Email
+                {t("email")}
               </label>
               <input
                 type="email"
@@ -160,7 +163,7 @@ export default function LoginPage() {
 
             <div>
               <label className="block text-sm font-medium text-text-2 mb-1.5">
-                Password
+                {t("password")}
               </label>
               <input
                 type="password"
@@ -185,7 +188,7 @@ export default function LoginPage() {
               className="w-full py-3 rounded-full bg-primary text-on-primary font-semibold text-sm hover:bg-primary-hover transition-colors disabled:opacity-50"
               style={{ transitionDuration: "var(--dur-1)" }}
             >
-              {loading ? "Signing in..." : "Sign in"}
+              {loading ? t("signingIn") : t("signIn")}
             </button>
           </form>
         </div>

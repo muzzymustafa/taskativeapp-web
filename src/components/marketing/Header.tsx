@@ -19,6 +19,9 @@ export function Header() {
           <a href="/#features" className="hover:text-primary transition-colors" style={{ transitionDuration: 'var(--dur-1)' }}>
             {t("features")}
           </a>
+          <a href="/#sectors" className="hover:text-primary transition-colors" style={{ transitionDuration: 'var(--dur-1)' }}>
+            {t("sectors")}
+          </a>
           <a href="/#pricing" className="hover:text-primary transition-colors" style={{ transitionDuration: 'var(--dur-1)' }}>
             {t("pricing")}
           </a>

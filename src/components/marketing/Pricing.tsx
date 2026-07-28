@@ -12,10 +12,14 @@ export function Pricing() {
       period: t("forever"),
       description: t("freeDesc"),
       features: [
-        t("tasksPerMonth"), t("groups3"), t("templates3"),
+        t("tasksPerMonth"), t("groups3"), t("invites5"),
         t("calendarView"), t("basicReminders"), t("homeWidget"),
+        t("offlineSupport"),
       ],
-      limitations: [t("noAdvancedReminders"), t("noActivityLogs"), t("archiveDays")],
+      limitations: [
+        t("noTemplates"), t("noRecurring"),
+        t("noAdvancedReminders"), t("noActivityLogs"), t("archiveDays"),
+      ],
       cta: t("startFree"),
       highlight: false,
     },
@@ -25,8 +29,9 @@ export function Pricing() {
       period: t("perMonth"),
       description: t("proDesc"),
       features: [
-        t("unlimitedTasks"), t("unlimitedGroups"), t("unlimitedTemplates"),
-        t("advancedReminders"), t("activityLogs"), t("notificationSettings"),
+        t("unlimitedTasks"), t("unlimitedGroups"), t("unlimitedInvites"),
+        t("unlimitedTemplates"), t("recurringTasks"), t("advancedReminders"),
+        t("activityLogs"), t("notificationSettings"),
         t("unlimitedArchive"), t("prioritySupport"),
       ],
       limitations: [],
@@ -65,12 +70,15 @@ export function Pricing() {
               <h3 className="text-xl font-bold text-text mb-1">{plan.name}</h3>
               <p className="text-sm text-text-dim mb-6">{plan.description}</p>
 
-              <div className="flex items-baseline gap-1 mb-8">
+              <div className="flex items-baseline gap-1 mb-2">
                 <span className={`text-4xl font-extrabold tracking-tight ${plan.highlight ? "text-primary" : "text-text"}`} style={{ letterSpacing: '-0.5px' }}>
                   {plan.price}
                 </span>
                 <span className="text-text-dim text-sm">{plan.period}</span>
               </div>
+              <p className="text-xs font-medium text-warmth-deep mb-8 h-4">
+                {plan.highlight ? t("yearlyNote") : ""}
+              </p>
 
               <ul className="space-y-3 mb-8">
                 {plan.features.map((feature) => (

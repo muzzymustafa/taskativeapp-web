@@ -11,6 +11,7 @@ import type {
   TaskRepository,
   GroupRepository,
   UserRepository,
+  CommentRepository,
 } from "../types";
 
 function toISO(val: any): string {
@@ -565,6 +566,139 @@ export const userRepo: UserRepository = {
       usedGroupsThisMonth: data.usedGroupsThisMonth || 0,
       taskLimitPerMonth: data.taskLimitPerMonth || 50,
       groupLimitPerMonth: data.groupLimitPerMonth || 3,
+    };
+  },
+};
+
+// ── Comments ──
+//
+// Only group tasks have comments — same as the mobile app, and the Firestore
+// rules only grant access under groups/{groupId}/tasks/{taskId}/comments to
+// members of that group. Personal tasks have nowhere to put them.
+
+const MAX_COMMENT_LENGTH = 2000;
+const COMMENT_PAGE_SIZE = 100;
+
+// Resolves a task id to its group task ref, but only if the caller is a member
+// of the owning group. Returns null for personal tasks and for tasks the caller
+// cannot see — the route turns both into a 404 so ids can't be probed.
+//
+// groupIdHint short-circuits the scan. It is NOT trusted for access control:
+// membership is still checked against the caller's usergroups doc, so a forged
+// hint just fails to match and falls through to null. Without the hint this is
+// one read per group the caller belongs to, which gets slow past ~20 groups.
+async function findGroupTaskRef(
+  userId: string,
+  taskId: string,
+  groupIdHint?: string
+): Promise<{ ref: FirebaseFirestore.DocumentReference; groupId: string } | null> {
+  const userGroupsDoc = await db.collection("usergroups").doc(userId).get();
+  if (!userGroupsDoc.exists) return null;
+
+  const groupsData = userGroupsDoc.data() || {};
+  const groupIds: string[] = Object.values(groupsData)
+    .map((g: any) => g.groupId)
+    .filter(Boolean);
+
+  const taskRefIn = (gId: string) =>
+    db.collection("groups").doc(gId).collection("tasks").doc(taskId);
+
+  if (groupIdHint && groupIds.includes(groupIdHint)) {
+    const ref = taskRefIn(groupIdHint);
+    const snap = await ref.get();
+    if (snap.exists) return { ref, groupId: groupIdHint };
+    return null;
+  }
+
+  for (const gId of groupIds) {
+    const ref = taskRefIn(gId);
+    const snap = await ref.get();
+    if (snap.exists) return { ref, groupId: gId };
+  }
+  return null;
+}
+
+export const commentRepo: CommentRepository = {
+  async listComments(userId, taskId, groupIdHint) {
+    const found = await findGroupTaskRef(userId, taskId, groupIdHint);
+    if (!found) return [];
+
+    const snap = await found.ref.collection("comments").limit(COMMENT_PAGE_SIZE).get();
+
+    return snap.docs
+      .map((d) => {
+        const data = d.data() || {};
+        return {
+          id: d.id,
+          commentText: data.commentText || "",
+          authorName: data.authorName || "",
+          authorEmail: data.authorEmail || "",
+          authorId: data.authorId || "",
+          timestamp: toISO(data.timestamp),
+        };
+      })
+      // Firestore can't order by a field the mobile app writes as serverTimestamp
+      // without an index, and the page is capped at 100 — sort in memory instead.
+      .sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+  },
+
+  async addComment(userId, taskId, commentText, author, groupIdHint) {
+    const text = commentText.trim();
+    if (!text) throw makeErr("EMPTY_COMMENT");
+    if (text.length > MAX_COMMENT_LENGTH) throw makeErr("COMMENT_TOO_LONG");
+
+    const found = await findGroupTaskRef(userId, taskId, groupIdHint);
+    if (!found) throw makeErr("TASK_NOT_FOUND");
+
+    const commentRef = found.ref.collection("comments").doc();
+    const userRef = db.collection("users").doc(userId);
+    const createdAt = new Date();
+
+    // Comments are writes too — they go through the same ban / rate-limit /
+    // daily-budget path as task edits so they can't be used to bypass it.
+    try {
+      await db.runTransaction(async (tx) => {
+        const userSnap = await tx.get(userRef);
+        const userData = userSnap.data() || {};
+        const nowMs = Date.now();
+
+        const dayWindowStart = userData.dayWindowStart || 0;
+        const dayExpired = nowMs - dayWindowStart > DAY_MS;
+        const dailyWrites = dayExpired ? 0 : (userData.dailyWrites || userData.usedTasksToday || 0);
+        if (dailyWrites >= DAILY_MAX) {
+          throw makeErr("DAILY_LIMIT", {
+            limit: DAILY_MAX,
+            retryAfterSec: Math.ceil((dayWindowStart + DAY_MS - nowMs) / 1000),
+          });
+        }
+
+        await enforceRateLimit(tx, userRef, userData, nowMs);
+
+        tx.update(userRef, {
+          dailyWrites: dayExpired ? 1 : FieldValue.increment(1),
+          dayWindowStart: dayExpired ? nowMs : dayWindowStart,
+        });
+
+        tx.set(commentRef, {
+          commentText: text,
+          authorId: userId,
+          authorEmail: author.email,
+          authorName: author.name || author.email,
+          timestamp: Timestamp.fromDate(createdAt),
+        });
+      });
+    } catch (e) {
+      fireSecurityAlert(userId, e);
+      throw e;
+    }
+
+    return {
+      id: commentRef.id,
+      commentText: text,
+      authorId: userId,
+      authorEmail: author.email,
+      authorName: author.name || author.email,
+      timestamp: createdAt.toISOString(),
     };
   },
 };

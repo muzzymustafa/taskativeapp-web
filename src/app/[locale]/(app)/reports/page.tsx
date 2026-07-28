@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations, useLocale } from "next-intl";
+
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -15,6 +17,8 @@ interface WeekData {
 }
 
 export default function ReportsPage() {
+  const t = useTranslations("app");
+  const locale = useLocale();
   const { data: session, status } = useSession();
   const router = useRouter();
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -38,7 +42,7 @@ export default function ReportsPage() {
       <div className="min-h-screen flex items-center justify-center bg-bg">
         <div className="flex items-center gap-3 text-text-muted">
           <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-          Loading...
+          {t("loading")}
         </div>
       </div>
     );
@@ -63,7 +67,7 @@ export default function ReportsPage() {
     const weekEnd = new Date(weekStart);
     weekEnd.setDate(weekStart.getDate() + 7);
 
-    const label = weekStart.toLocaleDateString("en", { month: "short", day: "numeric" });
+    const label = weekStart.toLocaleDateString(locale, { month: "short", day: "numeric" });
     const completed = tasks.filter((t) => {
       if (t.status !== "done" || !t.updatedAt) return false;
       const d = new Date(t.updatedAt);
@@ -100,7 +104,7 @@ export default function ReportsPage() {
   // Most productive day
   const dayCounts: Record<string, number> = {};
   tasks.filter((t) => t.status === "done" && t.updatedAt).forEach((t) => {
-    const day = new Date(t.updatedAt!).toLocaleDateString("en", { weekday: "long" });
+    const day = new Date(t.updatedAt!).toLocaleDateString(locale, { weekday: "long" });
     dayCounts[day] = (dayCounts[day] || 0) + 1;
   });
   const topDay = Object.entries(dayCounts).sort((a, b) => b[1] - a[1])[0];
@@ -116,7 +120,7 @@ export default function ReportsPage() {
       </header>
 
       <main className="max-w-4xl mx-auto px-6 py-8">
-        <h1 className="text-xl font-semibold text-text mb-6">Reports</h1>
+        <h1 className="text-xl font-semibold text-text mb-6">{t("navReports")}</h1>
 
         {loading ? (
           <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
@@ -128,25 +132,25 @@ export default function ReportsPage() {
             <div className="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-8">
               <div className="p-4 rounded-2xl bg-surface-1 border border-outline" style={{ boxShadow: "var(--shadow-1)" }}>
                 <p className="text-2xl font-bold text-primary tracking-tight">{completedThisMonth}</p>
-                <p className="text-xs text-text-dim mt-0.5">Completed this month</p>
+                <p className="text-xs text-text-dim mt-0.5">{t("completedThisMonth")}</p>
               </div>
               <div className="p-4 rounded-2xl bg-surface-1 border border-outline" style={{ boxShadow: "var(--shadow-1)" }}>
                 <p className="text-2xl font-bold text-warmth tracking-tight">{completionRate}%</p>
-                <p className="text-xs text-text-dim mt-0.5">Completion rate</p>
+                <p className="text-xs text-text-dim mt-0.5">{t("completionRate")}</p>
               </div>
               <div className="p-4 rounded-2xl bg-surface-1 border border-outline" style={{ boxShadow: "var(--shadow-1)" }}>
                 <p className="text-2xl font-bold text-success tracking-tight">{streak}</p>
-                <p className="text-xs text-text-dim mt-0.5">Day streak</p>
+                <p className="text-xs text-text-dim mt-0.5">{t("dayStreak")}</p>
               </div>
               <div className={`p-4 rounded-2xl border ${overdueAll > 0 ? "bg-danger-light border-danger/20" : "bg-surface-1 border-outline"}`} style={{ boxShadow: "var(--shadow-1)" }}>
                 <p className={`text-2xl font-bold tracking-tight ${overdueAll > 0 ? "text-danger" : "text-text-dim"}`}>{overdueAll}</p>
-                <p className={`text-xs mt-0.5 ${overdueAll > 0 ? "text-danger/70" : "text-text-dim"}`}>Overdue</p>
+                <p className={`text-xs mt-0.5 ${overdueAll > 0 ? "text-danger/70" : "text-text-dim"}`}>{t("statusOverdue")}</p>
               </div>
             </div>
 
             {/* Weekly chart */}
             <div className="p-6 rounded-2xl bg-surface-1 border border-outline mb-8" style={{ boxShadow: "var(--shadow-1)" }}>
-              <h2 className="text-sm font-semibold text-text mb-4">Last 4 Weeks</h2>
+              <h2 className="text-sm font-semibold text-text mb-4">{t("last4Weeks")}</h2>
               <div className="flex items-end gap-4 h-40">
                 {weeks.map((w, i) => (
                   <div key={i} className="flex-1 flex flex-col items-center gap-1">
@@ -183,10 +187,10 @@ export default function ReportsPage() {
                   <svg className="w-4 h-4 text-warmth" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M11.48 3.499a.562.562 0 011.04 0l2.125 5.111a.563.563 0 00.475.345l5.518.442c.499.04.701.663.321.988l-4.204 3.602a.563.563 0 00-.182.557l1.285 5.385a.562.562 0 01-.84.61l-4.725-2.885a.563.563 0 00-.586 0L6.982 20.54a.562.562 0 01-.84-.61l1.285-5.386a.562.562 0 00-.182-.557l-4.204-3.602a.563.563 0 01.321-.988l5.518-.442a.563.563 0 00.475-.345L11.48 3.5z" />
                   </svg>
-                  <h3 className="text-sm font-semibold text-text">Most Productive Day</h3>
+                  <h3 className="text-sm font-semibold text-text">{t("mostProductiveDay")}</h3>
                 </div>
                 <p className="text-lg font-bold text-warmth">{topDay ? topDay[0] : "—"}</p>
-                <p className="text-xs text-text-dim">{topDay ? `${topDay[1]} tasks completed` : "No data yet"}</p>
+                <p className="text-xs text-text-dim">{topDay ? t("tasksCompletedCount", { count: topDay[1] }) : t("noDataYet")}</p>
               </div>
 
               <div className="p-5 rounded-2xl bg-surface-1 border border-outline" style={{ boxShadow: "var(--shadow-1)" }}>
@@ -194,11 +198,15 @@ export default function ReportsPage() {
                   <svg className="w-4 h-4 text-primary" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 3v11.25A2.25 2.25 0 006 16.5h2.25M3.75 3h-1.5m1.5 0h16.5m0 0h1.5m-1.5 0v11.25A2.25 2.25 0 0118 16.5h-2.25m-7.5 0h7.5m-7.5 0l-1 3m8.5-3l1 3m0 0l.5 1.5m-.5-1.5h-9.5m0 0l-.5 1.5" />
                   </svg>
-                  <h3 className="text-sm font-semibold text-text">Total Overview</h3>
+                  <h3 className="text-sm font-semibold text-text">{t("totalOverview")}</h3>
                 </div>
                 <p className="text-lg font-bold text-primary">{tasks.length}</p>
                 <p className="text-xs text-text-dim">
-                  {tasks.filter((t) => t.status === "done").length} done · {pendingAll} active · {tasks.filter((t) => t.status === "cancelled").length} cancelled
+                  {t("overviewBreakdown", {
+                    done: tasks.filter((x) => x.status === "done").length,
+                    active: pendingAll,
+                    cancelled: tasks.filter((x) => x.status === "cancelled").length,
+                  })}
                 </p>
               </div>
             </div>

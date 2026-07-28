@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations, useLocale } from "next-intl";
+
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -10,6 +12,8 @@ import { TaskDetail } from "@/components/app/TaskDetail";
 import type { Task } from "@/lib/adapters/types";
 
 export default function CalendarPage() {
+  const t = useTranslations("app");
+  const locale = useLocale();
   const { data: session, status } = useSession();
   const router = useRouter();
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -67,7 +71,7 @@ export default function CalendarPage() {
       <div className="min-h-screen flex items-center justify-center bg-bg">
         <div className="flex items-center gap-3 text-text-muted">
           <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-          Loading...
+          {t("loading")}
         </div>
       </div>
     );
@@ -75,7 +79,7 @@ export default function CalendarPage() {
 
   const year = currentDate.getFullYear();
   const month = currentDate.getMonth();
-  const monthName = currentDate.toLocaleDateString("en", { month: "long", year: "numeric" });
+  const monthName = currentDate.toLocaleDateString(locale, { month: "long", year: "numeric" });
 
   // Build calendar grid
   const firstDay = new Date(year, month, 1);
@@ -111,7 +115,7 @@ export default function CalendarPage() {
   function goToday() { setCurrentDate(new Date()); }
 
   const selectedTasks = selectedDay ? tasksForDay(selectedDay) : [];
-  const dayLabels = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"];
+  const dayLabels = ["mon", "tue", "wed", "thu", "fri", "sat", "sun"].map((d) => t("day_" + d));
 
   return (
     <div className="min-h-screen bg-bg">
@@ -131,10 +135,10 @@ export default function CalendarPage() {
             {/* View toggle */}
             <div className="flex items-center gap-1 p-1 rounded-lg bg-surface-2 mr-2">
               <button className="px-3 py-1 rounded text-xs font-medium bg-surface-1 text-primary shadow-sm">
-                Calendar
+                {t("viewCalendar")}
               </button>
               <a href="/timeline" className="px-3 py-1 rounded text-xs font-medium text-text-muted hover:text-text transition-colors">
-                Timeline
+                {t("viewTimeline")}
               </a>
             </div>
             <button onClick={prevMonth} className="p-2 rounded-lg hover:bg-surface-2 text-text-muted transition-colors">
@@ -143,7 +147,7 @@ export default function CalendarPage() {
               </svg>
             </button>
             <button onClick={goToday} className="px-3 py-1.5 rounded-lg text-xs font-medium text-text-muted hover:text-text hover:bg-surface-2 transition-colors">
-              Today
+              {t("today")}
             </button>
             <button onClick={nextMonth} className="p-2 rounded-lg hover:bg-surface-2 text-text-muted transition-colors">
               <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -247,7 +251,7 @@ export default function CalendarPage() {
         {selectedDay && selectedTasks.length > 0 && (
           <div className="mt-6 p-5 rounded-2xl bg-surface-1 border border-outline" style={{ boxShadow: "var(--shadow-1)" }}>
             <h2 className="text-sm font-semibold text-text mb-4">
-              {selectedDay.toLocaleDateString("en", { weekday: "long", month: "long", day: "numeric" })}
+              {selectedDay.toLocaleDateString(locale, { weekday: "long", month: "long", day: "numeric" })}
               <span className="ml-2 text-xs text-text-dim font-normal">({selectedTasks.length} tasks)</span>
             </h2>
             <div className="space-y-2">
@@ -277,7 +281,7 @@ export default function CalendarPage() {
                   </span>
                   {t.dueDate && (
                     <span className="text-[10px] text-text-dim">
-                      {new Date(t.dueDate).toLocaleTimeString("en", { hour: "2-digit", minute: "2-digit" })}
+                      {new Date(t.dueDate).toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" })}
                     </span>
                   )}
                 </button>

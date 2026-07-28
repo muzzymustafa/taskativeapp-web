@@ -1,9 +1,11 @@
 "use client";
 
 import { signOut } from "next-auth/react";
+import { useTranslations } from "next-intl";
 import { ThemeToggle } from "./ThemeToggle";
 
 export function UserMenu({ email }: { email: string }) {
+  const t = useTranslations("app");
   return (
     <div className="flex items-center gap-2">
       <ThemeToggle />
@@ -13,7 +15,7 @@ export function UserMenu({ email }: { email: string }) {
         className="px-3 py-1.5 rounded-full text-xs font-medium bg-surface-2 text-text-muted hover:text-text hover:bg-surface-3 transition-colors"
         style={{ transitionDuration: "var(--dur-1)" }}
       >
-        Sign out
+        {t("signOut")}
       </button>
     </div>
   );

@@ -1,17 +1,20 @@
 "use client";
 
 import { useEffect, useState } from "react";
+import { useTranslations, useLocale } from "next-intl";
 import type { Task } from "@/lib/adapters/types";
 import { TaskDetail } from "./TaskDetail";
 
-const statusConfig: Record<string, { border: string; badge: string; badgeText: string; label: string }> = {
-  pending: { border: "border-l-warmth", badge: "bg-warmth-soft text-warmth-deep", badgeText: "Pending", label: "Pending" },
-  done: { border: "border-l-success", badge: "bg-success-light text-success", badgeText: "Done", label: "Done" },
-  cancelled: { border: "border-l-outline", badge: "bg-surface-3 text-text-dim", badgeText: "Cancelled", label: "Cancelled" },
-  late: { border: "border-l-danger", badge: "bg-danger-light text-danger", badgeText: "Overdue", label: "Overdue" },
+const statusConfig: Record<string, { border: string; badge: string; badgeKey: string }> = {
+  pending: { border: "border-l-warmth", badge: "bg-warmth-soft text-warmth-deep", badgeKey: "statusPending" },
+  done: { border: "border-l-success", badge: "bg-success-light text-success", badgeKey: "statusDone" },
+  cancelled: { border: "border-l-outline", badge: "bg-surface-3 text-text-dim", badgeKey: "statusCancelled" },
+  late: { border: "border-l-danger", badge: "bg-danger-light text-danger", badgeKey: "statusOverdue" },
 };
 
 export function TaskList() {
+  const t = useTranslations("app");
+  const locale = useLocale();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [loading, setLoading] = useState(true);
   const [filter, setFilter] = useState<"all" | "pending" | "done" | "cancelled">("all");
@@ -101,7 +104,7 @@ export function TaskList() {
           type="text"
           value={search}
           onChange={(e) => setSearch(e.target.value)}
-          placeholder="Search tasks..."
+          placeholder={t("searchTasks")}
           className="flex-1 bg-transparent text-sm text-text placeholder:text-text-dim focus:outline-none"
         />
         {search && (
@@ -117,19 +120,19 @@ export function TaskList() {
           onChange={(e) => setSort(e.target.value as any)}
           className="bg-transparent text-xs text-text-dim font-medium focus:outline-none cursor-pointer"
         >
-          <option value="newest">Newest</option>
-          <option value="oldest">Oldest</option>
-          <option value="dueDate">Due date</option>
+          <option value="newest">{t("sortNewest")}</option>
+          <option value="oldest">{t("sortOldest")}</option>
+          <option value="dueDate">{t("sortDueDate")}</option>
         </select>
       </div>
 
       {/* Filter chips */}
       <div className="flex gap-2 mb-5">
         {([
-          { key: "all" as const, label: "All", count: tasks.filter((t) => t.status !== "cancelled").length },
-          { key: "pending" as const, label: "Active", count: pendingCount },
-          { key: "done" as const, label: "Done", count: doneCount },
-          ...(cancelledCount > 0 ? [{ key: "cancelled" as const, label: "Cancelled", count: cancelledCount }] : []),
+          { key: "all" as const, label: t("filterAll"), count: tasks.filter((t) => t.status !== "cancelled").length },
+          { key: "pending" as const, label: t("filterActive"), count: pendingCount },
+          { key: "done" as const, label: t("filterDone"), count: doneCount },
+          ...(cancelledCount > 0 ? [{ key: "cancelled" as const, label: t("filterCancelled"), count: cancelledCount }] : []),
         ]).map((f) => (
           <button
             key={f.key}
@@ -155,8 +158,8 @@ export function TaskList() {
               <path strokeLinecap="round" strokeLinejoin="round" d="M9 12.75L11.25 15 15 9.75M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
             </svg>
           </div>
-          <p className="text-text-muted text-base mb-1">No tasks here</p>
-          <p className="text-text-dim text-sm">Create one to get started</p>
+          <p className="text-text-muted text-base mb-1">{t("emptyTitle")}</p>
+          <p className="text-text-dim text-sm">{t("emptySubtitle")}</p>
         </div>
       ) : (
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
@@ -223,7 +226,7 @@ export function TaskList() {
                       <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M6.75 3v2.25M17.25 3v2.25M3 18.75V7.5a2.25 2.25 0 012.25-2.25h13.5A2.25 2.25 0 0121 7.5v11.25m-18 0A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75m-18 0v-7.5A2.25 2.25 0 015.25 9h13.5A2.25 2.25 0 0121 11.25v7.5" />
                       </svg>
-                      {formatDate(task.dueDate)}
+                      {formatDate(task.dueDate, locale, t)}
                     </span>
                   )}
 
@@ -233,7 +236,7 @@ export function TaskList() {
                       <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M14.857 17.082a23.848 23.848 0 005.454-1.31A8.967 8.967 0 0118 9.75v-.7V9A6 6 0 006 9v.75a8.967 8.967 0 01-2.312 6.022c1.733.64 3.56 1.085 5.455 1.31m5.714 0a24.255 24.255 0 01-5.714 0m5.714 0a3 3 0 11-5.714 0" />
                       </svg>
-                      {new Date(task.reminderTime).toLocaleTimeString("en", { hour: "2-digit", minute: "2-digit" })}
+                      {new Date(task.reminderTime).toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" })}
                     </span>
                   )}
 
@@ -243,20 +246,20 @@ export function TaskList() {
                       <svg className="w-3 h-3" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" d="M18 18.72a9.094 9.094 0 003.741-.479 3 3 0 00-4.682-2.72m.94 3.198l.001.031c0 .225-.012.447-.037.666A11.944 11.944 0 0112 21c-2.17 0-4.207-.576-5.963-1.584A6.062 6.062 0 016 18.719m12 0a5.971 5.971 0 00-.941-3.197m0 0A5.995 5.995 0 0012 12.75a5.995 5.995 0 00-5.058 2.772" />
                       </svg>
-                      Group
+                      {t("chipGroup")}
                     </span>
                   )}
 
                   {/* Web indicator */}
                   {task.createdFrom === "web" && (
-                    <span className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-info/10 text-[10px] text-info font-medium" title="Created from web">
+                    <span className="inline-flex items-center px-1.5 py-0.5 rounded-md bg-info/10 text-[10px] text-info font-medium" title={t("createdFromWeb")}>
                       web
                     </span>
                   )}
 
                   {/* Status badge — right aligned */}
                   <span className={`ml-auto px-2 py-0.5 rounded-md text-[11px] font-medium ${cfg.badge}`}>
-                    {cfg.badgeText}
+                    {t(cfg.badgeKey)}
                   </span>
                 </div>
               </button>
@@ -277,22 +280,22 @@ export function TaskList() {
   );
 }
 
-function formatDate(iso: string): string {
+function formatDate(iso: string, locale: string, t: (k: string, v?: Record<string, string | number | Date>) => string): string {
   const d = new Date(iso);
   const now = new Date();
   const diff = d.getTime() - now.getTime();
   const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
-  const time = d.toLocaleTimeString("en", { hour: "2-digit", minute: "2-digit" });
+  const time = d.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" });
   const isEndOfDay = d.getHours() === 23 && d.getMinutes() >= 59;
 
-  if (days === 0) return isEndOfDay ? "Today" : `Today ${time}`;
-  if (days === 1) return isEndOfDay ? "Tomorrow" : `Tomorrow ${time}`;
-  if (days === -1) return "Yesterday";
+  if (days === 0) return isEndOfDay ? t("dateToday") : t("dateTodayAt", { time });
+  if (days === 1) return isEndOfDay ? t("dateTomorrow") : t("dateTomorrowAt", { time });
+  if (days === -1) return t("dateYesterday");
   if (days > 0 && days < 7) {
-    const day = d.toLocaleDateString("en", { weekday: "short" });
+    const day = d.toLocaleDateString(locale, { weekday: "short" });
     return isEndOfDay ? day : `${day} ${time}`;
   }
-  if (days < 0 && days > -7) return `${-days}d ago`;
+  if (days < 0 && days > -7) return t("dateDaysAgo", { days: -days });
 
-  return d.toLocaleDateString("en", { month: "short", day: "numeric" });
+  return d.toLocaleDateString(locale, { month: "short", day: "numeric" });
 }

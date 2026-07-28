@@ -13,7 +13,13 @@ export function Footer() {
         <div className="flex flex-col sm:flex-row items-center justify-between gap-6">
           <Logo size="sm" />
 
-          <div className="flex items-center gap-6 text-sm text-text-muted">
+          <div className="flex items-center gap-6 text-sm text-text-muted flex-wrap justify-center">
+            <Link href="/guide" className="hover:text-primary transition-colors" style={{ transitionDuration: 'var(--dur-1)' }}>
+              Guide
+            </Link>
+            <Link href="/one-pager" className="hover:text-primary transition-colors" style={{ transitionDuration: 'var(--dur-1)' }}>
+              One-pager
+            </Link>
             <Link href="/privacy" className="hover:text-primary transition-colors" style={{ transitionDuration: 'var(--dur-1)' }}>
               {t("privacy")}
             </Link>

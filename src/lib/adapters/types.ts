@@ -86,3 +86,25 @@ export interface GroupRepository {
 export interface UserRepository {
   getProfile(userId: string): Promise<UserProfile | null>;
 }
+
+// Comments live on group tasks only — groups/{groupId}/tasks/{taskId}/comments.
+// Field names mirror the mobile app so both clients read the same docs.
+export interface TaskComment {
+  id: string;
+  commentText: string;
+  authorName?: string;
+  authorEmail?: string;
+  authorId?: string;
+  timestamp: string;
+}
+
+export interface CommentRepository {
+  listComments(userId: string, taskId: string, groupIdHint?: string): Promise<TaskComment[]>;
+  addComment(
+    userId: string,
+    taskId: string,
+    commentText: string,
+    author: { email: string; name?: string },
+    groupIdHint?: string
+  ): Promise<TaskComment>;
+}

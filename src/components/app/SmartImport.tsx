@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations } from "next-intl";
+
 import { useState } from "react";
 
 interface ExtractedTask {
@@ -8,6 +10,7 @@ interface ExtractedTask {
 }
 
 export function SmartImport({ onImported }: { onImported: () => void }) {
+  const t = useTranslations("app");
   const [open, setOpen] = useState(false);
   const [text, setText] = useState("");
   const [tasks, setTasks] = useState<ExtractedTask[]>([]);
@@ -107,7 +110,7 @@ export function SmartImport({ onImported }: { onImported: () => void }) {
         <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
           <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z" />
         </svg>
-        Smart Import — paste text to create tasks
+        {t("smartImportCta")}
       </button>
     );
   }
@@ -119,7 +122,7 @@ export function SmartImport({ onImported }: { onImported: () => void }) {
           <svg className="w-5 h-5 text-primary" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
             <path strokeLinecap="round" strokeLinejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.455 2.456L21.75 6l-1.036.259a3.375 3.375 0 00-2.455 2.456z" />
           </svg>
-          <h3 className="text-sm font-semibold text-text">Smart Import</h3>
+          <h3 className="text-sm font-semibold text-text">{t("smartImportTitle")}</h3>
         </div>
         <button onClick={() => { setOpen(false); setStep("input"); setText(""); setTasks([]); }} className="text-text-dim hover:text-text">
           <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -133,7 +136,7 @@ export function SmartImport({ onImported }: { onImported: () => void }) {
           <textarea
             value={text}
             onChange={(e) => setText(e.target.value)}
-            placeholder={"Paste your text here...\n\nExamples:\n- Meeting notes\n- Email with action items\n- Todo list\n- Any text with tasks"}
+            placeholder={t("smartImportPlaceholder")}
             rows={6}
             className="w-full px-4 py-3 rounded-xl bg-bg border border-outline text-sm text-text placeholder:text-text-dim focus:outline-none focus:border-primary resize-none leading-relaxed"
             style={{ transitionDuration: "var(--dur-1)" }}
@@ -141,7 +144,7 @@ export function SmartImport({ onImported }: { onImported: () => void }) {
           />
           <div className="flex items-center justify-between mt-3">
             <p className="text-xs text-text-dim">
-              Paste meeting notes, emails, or lists — we&apos;ll extract tasks automatically
+              {t("smartImportHint")}
             </p>
             <button
               onClick={handleExtract}
@@ -149,14 +152,14 @@ export function SmartImport({ onImported }: { onImported: () => void }) {
               className="px-5 py-2 rounded-lg bg-primary text-on-primary text-sm font-semibold hover:bg-primary-hover transition-colors disabled:opacity-40"
               style={{ transitionDuration: "var(--dur-1)" }}
             >
-              Extract tasks
+              {t("smartImportExtract")}
             </button>
           </div>
         </>
       ) : (
         <>
           <p className="text-xs text-text-muted mb-3">
-            {tasks.filter((t) => t.selected).length} of {tasks.length} tasks selected
+            {t("smartImportSelected", { selected: tasks.filter((x) => x.selected).length, total: tasks.length })}
           </p>
           <div className="space-y-1 max-h-64 overflow-y-auto mb-4">
             {tasks.map((task, i) => (
@@ -183,14 +186,14 @@ export function SmartImport({ onImported }: { onImported: () => void }) {
               onClick={() => setStep("input")}
               className="text-sm text-text-muted hover:text-text transition-colors"
             >
-              Back
+              {t("back")}
             </button>
             <div className="flex gap-2">
               <button
                 onClick={() => setTasks((prev) => prev.map((t) => ({ ...t, selected: !prev.every((p) => p.selected) })))}
                 className="px-3 py-2 rounded-lg text-xs text-text-muted hover:bg-surface-2 transition-colors"
               >
-                Toggle all
+                {t("toggleAll")}
               </button>
               <button
                 onClick={handleImport}
@@ -198,7 +201,7 @@ export function SmartImport({ onImported }: { onImported: () => void }) {
                 className="px-5 py-2 rounded-lg bg-primary text-on-primary text-sm font-semibold hover:bg-primary-hover transition-colors disabled:opacity-40"
                 style={{ transitionDuration: "var(--dur-1)" }}
               >
-                {importing ? `Importing...` : `Import ${tasks.filter((t) => t.selected).length} tasks`}
+                {importing ? t("importing") : t("importCount", { count: tasks.filter((x) => x.selected).length })}
               </button>
             </div>
           </div>

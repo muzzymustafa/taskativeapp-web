@@ -1,6 +1,7 @@
 import { Header } from "@/components/marketing/Header";
 import { Hero } from "@/components/marketing/Hero";
 import { Features } from "@/components/marketing/Features";
+import { Sectors } from "@/components/marketing/Sectors";
 import { Platforms } from "@/components/marketing/Platforms";
 import { Stats } from "@/components/marketing/Stats";
 import { Pricing } from "@/components/marketing/Pricing";
@@ -16,6 +17,7 @@ export default function Home() {
         <Hero />
         <Stats />
         <Features />
+        <Sectors />
         <Platforms />
         <Pricing />
         <CTA />

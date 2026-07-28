@@ -1,5 +1,7 @@
 "use client";
 
+import { useTranslations, useLocale } from "next-intl";
+
 import { useEffect, useState } from "react";
 import { useSession } from "next-auth/react";
 import { useRouter } from "next/navigation";
@@ -12,6 +14,8 @@ import type { Task } from "@/lib/adapters/types";
 type Scale = "week" | "month";
 
 export default function TimelinePage() {
+  const t = useTranslations("app");
+  const locale = useLocale();
   const { data: session, status } = useSession();
   const router = useRouter();
   const [tasks, setTasks] = useState<Task[]>([]);
@@ -37,7 +41,7 @@ export default function TimelinePage() {
       <div className="min-h-screen flex items-center justify-center bg-bg">
         <div className="flex items-center gap-3 text-text-muted">
           <div className="w-5 h-5 border-2 border-primary border-t-transparent rounded-full animate-spin" />
-          Loading...
+          {t("loading")}
         </div>
       </div>
     );
@@ -161,8 +165,8 @@ export default function TimelinePage() {
   }
 
   const rangeLabel = scale === "week"
-    ? `${startOfRange.toLocaleDateString("en", { month: "short", day: "numeric" })} – ${new Date(endOfRange.getTime() - 1).toLocaleDateString("en", { month: "short", day: "numeric" })}`
-    : anchor.toLocaleDateString("en", { month: "long", year: "numeric" });
+    ? `${startOfRange.toLocaleDateString(locale, { month: "short", day: "numeric" })} – ${new Date(endOfRange.getTime() - 1).toLocaleDateString(locale, { month: "short", day: "numeric" })}`
+    : anchor.toLocaleDateString(locale, { month: "long", year: "numeric" });
 
   return (
     <div className="min-h-screen bg-bg">
@@ -185,10 +189,10 @@ export default function TimelinePage() {
             {/* View toggle */}
             <div className="flex items-center gap-1 p-1 rounded-lg bg-surface-2 mr-1">
               <a href="/calendar" className="px-3 py-1 rounded text-xs font-medium text-text-muted hover:text-text transition-colors">
-                Calendar
+                {t("viewCalendar")}
               </a>
               <button className="px-3 py-1 rounded text-xs font-medium bg-surface-1 text-primary shadow-sm">
-                Timeline
+                {t("viewTimeline")}
               </button>
             </div>
             {/* Scale toggle */}
@@ -197,13 +201,13 @@ export default function TimelinePage() {
                 onClick={() => setScale("week")}
                 className={`px-3 py-1 rounded text-xs font-medium transition-colors ${scale === "week" ? "bg-surface-1 text-primary shadow-sm" : "text-text-muted"}`}
               >
-                Week
+                {t("rangeWeek")}
               </button>
               <button
                 onClick={() => setScale("month")}
                 className={`px-3 py-1 rounded text-xs font-medium transition-colors ${scale === "month" ? "bg-surface-1 text-primary shadow-sm" : "text-text-muted"}`}
               >
-                Month
+                {t("rangeMonth")}
               </button>
             </div>
             {/* Nav */}
@@ -214,7 +218,7 @@ export default function TimelinePage() {
                 </svg>
               </button>
               <button onClick={() => setAnchor(new Date())} className="px-3 py-1.5 rounded-lg text-xs font-medium text-text-muted hover:text-text hover:bg-surface-2 transition-colors">
-                Today
+                {t("today")}
               </button>
               <button onClick={() => shiftRange(1)} className="p-2 rounded-lg hover:bg-surface-2 text-text-muted transition-colors">
                 <svg className="w-4 h-4" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
@@ -324,7 +328,7 @@ export default function TimelinePage() {
                             }}
                             onDragEnd={() => setDraggingTaskId(null)}
                             className="absolute left-0 top-0 bottom-0 w-2 cursor-ew-resize bg-black/20 hover:bg-black/40 rounded-l-md"
-                            title="Drag to change start date"
+                            title={t("dragStart")}
                           />
 
                           {/* MIDDLE — move whole task */}
@@ -358,7 +362,7 @@ export default function TimelinePage() {
                             }}
                             onDragEnd={() => setDraggingTaskId(null)}
                             className="absolute right-0 top-0 bottom-0 w-2 cursor-ew-resize bg-black/20 hover:bg-black/40 rounded-r-md"
-                            title="Drag to change due date"
+                            title={t("dragDue")}
                           />
                         </div>
                       </div>
@@ -379,7 +383,7 @@ export default function TimelinePage() {
           </div>
           <div className="hidden sm:flex items-center gap-3 text-text-dim">
             <span>💡</span>
-            <span><strong className="text-text-muted">Drag middle</strong> to move · <strong className="text-text-muted">Drag edges</strong> to resize</span>
+            <span>{t("dragHint")}</span>
           </div>
         </div>
 

@@ -1,7 +1,8 @@
 "use client";
 
 import { useState, useRef, useEffect } from "react";
-import type { Task } from "@/lib/adapters/types";
+import { useTranslations, useLocale } from "next-intl";
+import type { Task, TaskComment } from "@/lib/adapters/types";
 
 interface Props {
   task: Task;
@@ -10,6 +11,8 @@ interface Props {
 }
 
 export function TaskDetail({ task, onClose, onUpdate }: Props) {
+  const t = useTranslations("app");
+  const locale = useLocale();
   const [status, setStatus] = useState(task.status);
   const [title, setTitle] = useState(task.title);
   const [description, setDescription] = useState(task.description || "");
@@ -20,12 +23,57 @@ export function TaskDetail({ task, onClose, onUpdate }: Props) {
   const titleRef = useRef<HTMLInputElement>(null);
   const descRef = useRef<HTMLTextAreaElement>(null);
 
+  // Comments — group tasks only, mirroring the mobile app and the Firestore rules.
+  const isGroupTask = Boolean(task.groupId);
+  const [comments, setComments] = useState<TaskComment[]>([]);
+  const [commentsLoading, setCommentsLoading] = useState(isGroupTask);
+  const [newComment, setNewComment] = useState("");
+  const [postingComment, setPostingComment] = useState(false);
+  const [commentError, setCommentError] = useState("");
+
   useEffect(() => {
     if (editingTitle && titleRef.current) titleRef.current.focus();
   }, [editingTitle]);
   useEffect(() => {
     if (editingDesc && descRef.current) descRef.current.focus();
   }, [editingDesc]);
+
+  useEffect(() => {
+    if (!isGroupTask) return;
+    let cancelled = false;
+    setCommentsLoading(true);
+    fetch(`/api/tasks/${task.id}/comments?groupId=${encodeURIComponent(task.groupId!)}`)
+      .then((r) => (r.ok ? r.json() : { comments: [] }))
+      .then((d) => { if (!cancelled) setComments(d.comments || []); })
+      .catch(() => { if (!cancelled) setComments([]); })
+      .finally(() => { if (!cancelled) setCommentsLoading(false); });
+    return () => { cancelled = true; };
+  }, [task.id, isGroupTask]);
+
+  async function handleAddComment() {
+    const text = newComment.trim();
+    if (!text || postingComment) return;
+    setPostingComment(true);
+    setCommentError("");
+    try {
+      const res = await fetch(`/api/tasks/${task.id}/comments`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ commentText: text, groupId: task.groupId }),
+      });
+      if (!res.ok) {
+        const body = await res.json().catch(() => ({}));
+        setCommentError(body.error || t("commentFailed"));
+      } else {
+        const created: TaskComment = await res.json();
+        setComments((prev) => [...prev, created]);
+        setNewComment("");
+      }
+    } catch {
+      setCommentError(t("commentFailed"));
+    }
+    setPostingComment(false);
+  }
 
   async function save(fields: Record<string, any>) {
     setSaving(true);
@@ -76,24 +124,11 @@ export function TaskDetail({ task, onClose, onUpdate }: Props) {
     const now = new Date();
     const diffMs = now.getTime() - d.getTime();
     const diffDays = Math.floor(diffMs / (1000 * 60 * 60 * 24));
-    const time = d.toLocaleTimeString("en", { hour: "2-digit", minute: "2-digit" });
-    if (diffDays === 0) return { main: "Today", sub: time };
-    if (diffDays === 1) return { main: "Yesterday", sub: time };
-    if (diffDays > 1 && diffDays < 7) return { main: `${diffDays} days ago`, sub: time };
-    return { main: d.toLocaleDateString("en", { month: "short", day: "numeric" }), sub: time };
-  }
-
-  function dueDateDisplay(iso: string): { main: string; sub: string } {
-    const d = new Date(iso);
-    const now = new Date();
-    const diffDays = Math.ceil((d.getTime() - now.getTime()) / (1000 * 60 * 60 * 24));
-    const datePart = d.toLocaleDateString("en", { weekday: "short", month: "short", day: "numeric" });
-    const time = d.toLocaleTimeString("en", { hour: "2-digit", minute: "2-digit" });
-    if (diffDays === 0) return { main: `Today, ${time}`, sub: "" };
-    if (diffDays === 1) return { main: `Tomorrow, ${time}`, sub: "" };
-    if (diffDays < 0) return { main: datePart, sub: `${-diffDays}d overdue` };
-    if (diffDays < 7) return { main: datePart, sub: `In ${diffDays} days` };
-    return { main: datePart, sub: time };
+    const time = d.toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" });
+    if (diffDays === 0) return { main: t("dateToday"), sub: time };
+    if (diffDays === 1) return { main: t("dateYesterday"), sub: time };
+    if (diffDays > 1 && diffDays < 7) return { main: t("dateDaysAgo", { days: diffDays }), sub: time };
+    return { main: d.toLocaleDateString(locale, { month: "short", day: "numeric" }), sub: time };
   }
 
   const isDone = status === "done";
@@ -136,7 +171,7 @@ export function TaskDetail({ task, onClose, onUpdate }: Props) {
               <h2
                 onClick={() => setEditingTitle(true)}
                 className={`text-lg font-semibold leading-snug cursor-text hover:bg-surface-2 rounded px-1 -mx-1 py-0.5 transition-colors ${isDone ? "line-through text-text-dim" : "text-text"}`}
-                title="Click to edit"
+                title={t("clickToEdit")}
               >
                 {task.title}
               </h2>
@@ -160,7 +195,7 @@ export function TaskDetail({ task, onClose, onUpdate }: Props) {
               <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25H12" />
               </svg>
-              Description
+              {t("description")}
             </div>
             {editingDesc ? (
               <textarea
@@ -171,15 +206,15 @@ export function TaskDetail({ task, onClose, onUpdate }: Props) {
                 onKeyDown={(e) => { if (e.key === "Escape") { setDescription(task.description || ""); setEditingDesc(false); } }}
                 rows={3}
                 className="w-full text-sm text-text-2 bg-transparent border border-outline rounded-lg p-3 focus:outline-none focus:border-primary resize-none leading-relaxed"
-                placeholder="Add a description..."
+                placeholder={t("addDescription")}
               />
             ) : (
               <p
                 onClick={() => setEditingDesc(true)}
                 className="text-sm text-text-2 leading-relaxed whitespace-pre-wrap cursor-text hover:bg-surface-2 rounded-lg p-2 -m-2 transition-colors min-h-[2rem]"
-                title="Click to edit"
+                title={t("clickToEdit")}
               >
-                {description || <span className="text-text-dim italic">Add a description...</span>}
+                {description || <span className="text-text-dim italic">{t("addDescription")}</span>}
               </p>
             )}
           </div>
@@ -193,11 +228,11 @@ export function TaskDetail({ task, onClose, onUpdate }: Props) {
                 </svg>
               </div>
               <div>
-                <p className="text-[10px] uppercase tracking-wider text-text-dim font-medium">Starts</p>
+                <p className="text-[10px] uppercase tracking-wider text-text-dim font-medium">{t("starts")}</p>
                 <p className="text-sm text-text">
-                  {new Date(task.startDate).toLocaleDateString("en", { weekday: "short", month: "short", day: "numeric" })}
+                  {new Date(task.startDate).toLocaleDateString(locale, { weekday: "short", month: "short", day: "numeric" })}
                   {" · "}
-                  {new Date(task.startDate).toLocaleTimeString("en", { hour: "2-digit", minute: "2-digit" })}
+                  {new Date(task.startDate).toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" })}
                 </p>
               </div>
             </div>
@@ -211,18 +246,18 @@ export function TaskDetail({ task, onClose, onUpdate }: Props) {
               </svg>
             </div>
             <div className="flex-1">
-              <p className="text-[10px] uppercase tracking-wider text-text-dim font-medium">Due</p>
+              <p className="text-[10px] uppercase tracking-wider text-text-dim font-medium">{t("due")}</p>
               {task.dueDate ? (
                 <div>
                   <p className={`text-sm font-medium ${isOverdue ? "text-danger" : "text-text"}`}>
-                    {new Date(task.dueDate).toLocaleDateString("en", { weekday: "short", month: "short", day: "numeric" })}
+                    {new Date(task.dueDate).toLocaleDateString(locale, { weekday: "short", month: "short", day: "numeric" })}
                     {" · "}
-                    {new Date(task.dueDate).toLocaleTimeString("en", { hour: "2-digit", minute: "2-digit" })}
+                    {new Date(task.dueDate).toLocaleTimeString(locale, { hour: "2-digit", minute: "2-digit" })}
                   </p>
-                  {isOverdue && <p className="text-xs text-danger">Overdue</p>}
+                  {isOverdue && <p className="text-xs text-danger">{t("statusOverdue")}</p>}
                 </div>
               ) : (
-                <p className="text-sm text-text-dim">No due date</p>
+                <p className="text-sm text-text-dim">{t("noDueDate")}</p>
               )}
             </div>
             <input
@@ -242,7 +277,7 @@ export function TaskDetail({ task, onClose, onUpdate }: Props) {
                 </svg>
               </div>
               <p className="text-sm text-text-2">
-                {(() => { const r = smartDate(task.reminderTime); return `${r.main} at ${r.sub}`; })()}
+                {(() => { const r = smartDate(task.reminderTime!); return t("reminderAt", { date: r.main, time: r.sub }); })()}
               </p>
             </div>
           )}
@@ -255,7 +290,7 @@ export function TaskDetail({ task, onClose, onUpdate }: Props) {
                   <path strokeLinecap="round" strokeLinejoin="round" d="M16.023 9.348h4.992v-.001M2.985 19.644v-4.992m0 0h4.992m-4.993 0l3.181 3.183a8.25 8.25 0 0013.803-3.7M4.031 9.865a8.25 8.25 0 0113.803-3.7l3.181 3.182" />
                 </svg>
               </div>
-              <p className="text-sm text-text-2 capitalize">{task.recurrence}</p>
+              <p className="text-sm text-text-2">{t("repeat_" + task.recurrence)}</p>
             </div>
           )}
 
@@ -267,7 +302,7 @@ export function TaskDetail({ task, onClose, onUpdate }: Props) {
                   <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                     <path strokeLinecap="round" strokeLinejoin="round" d="M8.25 6.75h12M8.25 12h12m-12 5.25h12M3.75 6.75h.007v.008H3.75V6.75zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zM3.75 12h.007v.008H3.75V12zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0zm-.375 5.25h.007v.008H3.75v-.008zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z" />
                   </svg>
-                  Checklist
+                  {t("checklist")}
                 </div>
                 <span className="text-xs text-text-dim">
                   {checklist.filter((c) => c.done).length}/{checklist.length}
@@ -296,7 +331,7 @@ export function TaskDetail({ task, onClose, onUpdate }: Props) {
                 <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
                   <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0" />
                 </svg>
-                Assigned to
+                {t("assignedTo")}
               </div>
               <div className="flex flex-wrap gap-2">
                 {task.assignedEmails.map((email) => (
@@ -306,13 +341,77 @@ export function TaskDetail({ task, onClose, onUpdate }: Props) {
             </div>
           )}
 
+          {/* Comments — group tasks only */}
+          {isGroupTask && (
+            <div>
+              <div className="flex items-center gap-2 text-xs font-medium text-text-dim uppercase tracking-wider mb-3">
+                <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" strokeWidth={2} viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" d="M2.25 12.76c0 1.6 1.123 2.994 2.707 3.227 1.087.16 2.185.283 3.293.369V21l4.076-4.076a1.526 1.526 0 011.037-.443 48.282 48.282 0 005.68-.494c1.584-.233 2.707-1.626 2.707-3.228V6.741c0-1.602-1.123-2.995-2.707-3.228A48.394 48.394 0 0012 3c-2.392 0-4.744.175-7.043.513C3.373 3.746 2.25 5.14 2.25 6.741v6.018z" />
+                </svg>
+                {t("comments")}
+                {comments.length > 0 && <span className="text-text-dim normal-case">· {comments.length}</span>}
+              </div>
+
+              {commentsLoading ? (
+                <div className="space-y-2">
+                  <div className="h-12 rounded-lg bg-surface-2 animate-pulse" />
+                  <div className="h-12 rounded-lg bg-surface-2 animate-pulse w-4/5" />
+                </div>
+              ) : (
+                <div className="space-y-2 mb-3">
+                  {comments.map((c) => (
+                    <div key={c.id} className="rounded-lg bg-surface-2 px-3 py-2">
+                      <div className="flex items-baseline justify-between gap-3 mb-0.5">
+                        <span className="text-xs font-medium text-text-2 truncate">
+                          {c.authorEmail || c.authorName || t("unknownUser")}
+                        </span>
+                        <span className="text-[10px] text-text-dim shrink-0">
+                          {smartDate(c.timestamp).main}
+                        </span>
+                      </div>
+                      <p className="text-sm text-text whitespace-pre-wrap leading-relaxed">{c.commentText}</p>
+                    </div>
+                  ))}
+                  {comments.length === 0 && (
+                    <p className="text-sm text-text-dim italic">{t("noComments")}</p>
+                  )}
+                </div>
+              )}
+
+              <div className="flex items-end gap-2">
+                <textarea
+                  value={newComment}
+                  onChange={(e) => setNewComment(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && (e.metaKey || e.ctrlKey)) {
+                      e.preventDefault();
+                      handleAddComment();
+                    }
+                  }}
+                  rows={2}
+                  maxLength={2000}
+                  placeholder={t("writeComment")}
+                  className="flex-1 text-sm text-text-2 bg-transparent border border-outline rounded-lg p-2.5 focus:outline-none focus:border-primary resize-none leading-relaxed"
+                />
+                <button
+                  onClick={handleAddComment}
+                  disabled={!newComment.trim() || postingComment}
+                  className="px-3 py-2 rounded-lg bg-primary/10 text-primary text-sm font-medium hover:bg-primary/20 disabled:opacity-40 disabled:cursor-not-allowed transition-colors shrink-0"
+                >
+                  {postingComment ? "..." : t("send")}
+                </button>
+              </div>
+              {commentError && <p className="text-xs text-danger mt-1.5">{commentError}</p>}
+            </div>
+          )}
+
           {/* Meta */}
           <div className="pt-3 border-t border-outline/50 flex items-center gap-4 text-xs text-text-dim">
-            <span>Created {smartDate(task.createdAt).main}</span>
+            <span>{t("createdAt", { date: smartDate(task.createdAt).main })}</span>
             {task.updatedAt && (
               <>
                 <span className="w-1 h-1 rounded-full bg-outline" />
-                <span>Updated {smartDate(task.updatedAt).main}</span>
+                <span>{t("updatedAt", { date: smartDate(task.updatedAt).main })}</span>
               </>
             )}
           </div>
@@ -323,16 +422,16 @@ export function TaskDetail({ task, onClose, onUpdate }: Props) {
           <div className="flex gap-2">
             {status !== "done" ? (
               <button onClick={() => handleStatusChange("done")} className="px-4 py-2 rounded-lg bg-primary/10 text-primary text-sm font-medium hover:bg-primary/20 transition-colors">
-                Mark done
+                {t("markDone")}
               </button>
             ) : (
               <button onClick={() => handleStatusChange("pending")} className="px-4 py-2 rounded-lg bg-surface-2 text-text-muted text-sm font-medium hover:bg-surface-3 transition-colors">
-                Reopen
+                {t("reopen")}
               </button>
             )}
           </div>
           <button onClick={onClose} className="px-4 py-2 rounded-lg text-sm text-text-muted hover:bg-surface-2 transition-colors">
-            Close
+            {t("close")}
           </button>
         </div>
       </div>
